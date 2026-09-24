@@ -224,3 +224,19 @@ def _pause_guard():
         return
     if request.path == "/plugins/rootpath/api/exam/start" and _runtime("deploy_paused", "0") == "1":
         abort(503, description="Plataforma en pausa por carga alta (monitor).")
+
+
+@bp.route("/api/agent/map", methods=["POST"])
+def agent_map():
+    key = request.headers.get("X-Agent-Key", "")
+    if not _runtime("agent_key") or key != _runtime("agent_key"):
+        abort(403, description="agent key invalida")
+    d = request.get_json() or {}
+    ch = Challenges.query.filter_by(name=d.get("challenge_name")).first()
+    dom = RootPathDomain.query.filter_by(name=d.get("domain_name")).first()
+    if not ch or not dom:
+        return jsonify({"success": False, "error": "reto o dominio no encontrado"}), 404
+    if not RootPathMap.query.filter_by(challenge_id=ch.id, domain_id=dom.id).first():
+        db.session.add(RootPathMap(challenge_id=ch.id, domain_id=dom.id))
+        db.session.commit()
+    return jsonify({"success": True, "challenge_id": ch.id, "domain_id": dom.id})

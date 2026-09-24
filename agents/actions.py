@@ -1,4 +1,5 @@
-import json, os, config, pve, requests
+import json, os, sys, config, pve, requests
+sys.path.append("/opt/rootpath/pipeline")
 
 def _rt(name, default=None):
     p = os.path.join(config.RUNTIME, name)
@@ -63,6 +64,21 @@ def execute(action, params):
         cid = int(params["challenge_id"]); level = int(params.get("level", 1))
         return _ctfd("/plugins/rootpath/api/agent/hint?challenge_id=%d&level=%d" % (cid, level),
                      extra={"X-Agent-Key": key})
+    if action == "generate_challenge":
+        import generator
+        return generator.generate(params)
+    if action == "list_staging":
+        import state as _st
+        return _st.load()
+    if action == "validate_challenge":
+        import validator
+        return validator.validate(params["slug"])
+    if action == "approve_challenge":
+        import state as _st
+        return _st.set_state(params["slug"], "approved", approved_by=params.get("by", "mentor"))
+    if action == "publish_challenge":
+        import publisher
+        return publisher.publish(params["slug"])
     if action == "read_flag":
         raise PermissionError("accion prohibida para todos los agentes")
     raise ValueError("accion desconocida: " + action)

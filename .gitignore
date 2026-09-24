@@ -6,3 +6,6 @@ ctfd/logs/
 agents/pve_token
 agents/audit.jsonl
 runtime/
+pipeline/staging/
+pipeline/published-compose.yml
+pipeline/published_services.json

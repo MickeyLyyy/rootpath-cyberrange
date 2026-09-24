@@ -4,8 +4,11 @@ ALLOW = {
                 "set_deploy_paused", "write_status", "alert"},
     "curador": {"list_paths", "recommend_next", "request_deploy"},
     "tutor":   {"get_hint"},
+    "creador": {"generate_challenge", "list_staging"},
+    "validador": {"validate_challenge"},
+    "mentor": {"approve_challenge", "reject_challenge", "publish_challenge"},
 }
-RATE = {"monitor": 120, "curador": 30, "tutor": 30}
+RATE = {"monitor": 120, "curador": 30, "tutor": 30, "creador": 30, "validador": 30, "mentor": 30}
 _calls = collections.defaultdict(list)
 class Denied(PermissionError):
     pass
