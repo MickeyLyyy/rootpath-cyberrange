@@ -77,3 +77,26 @@
   }
   document.addEventListener('DOMContentLoaded',function(){ loadPaths(); loadExam(); });
 })();
+
+(function(){
+  async function loadAnalytics(){
+    var root=document.getElementById('rp-analytics'); if(!root) return;
+    try{
+      var r=await fetch('/plugins/rootpath/api/analytics',{credentials:'same-origin'});
+      if(r.status!==200){root.innerHTML='<p>Inicia sesion para ver las analiticas.</p>';return;}
+      var d=(await r.json()).data;
+      var h='<div class="rp-cert"><h3>Resumen</h3><p>Retos: '+d.challenges+' &middot; Usuarios: '+d.users+' &middot; Resoluciones: '+d.solves+' &middot; Pistas usadas: '+d.hint_unlocks+'</p></div>';
+      h+='<div class="rp-cert"><h3>Retos mas dificiles (menor tasa de resolucion)</h3><ul class="rp-list">';
+      d.hardest.forEach(function(c){h+='<li'+(c.flag?' class="rp-warn"':'')+'>'+c.name+' <small>'+c.solves+' solves &middot; '+c.solve_rate+'%'+(c.flag?' &middot; REVISAR':'')+'</small></li>';});
+      h+='</ul></div>';
+      h+='<div class="rp-cert"><h3>Por categoria</h3><ul class="rp-list">';
+      d.by_category.forEach(function(c){h+='<li>'+c.category+': '+c.challenges+' retos &middot; '+c.solves+' solves</li>';});
+      h+='</ul></div>';
+      h+='<div class="rp-cert"><h3>Top usuarios</h3><ul class="rp-list">';
+      d.top_users.forEach(function(u){h+='<li>'+u.user+' <small>'+u.score+' pts</small></li>';});
+      h+='</ul></div>';
+      root.innerHTML=h;
+    }catch(e){root.innerHTML='<p>Error cargando analiticas: '+e+'</p>';}
+  }
+  document.addEventListener('DOMContentLoaded',function(){ loadAnalytics(); });
+})();

@@ -1,0 +1,12 @@
+dn: cn=admin,dc=rootpath,dc=local
+cn: admin
+
+dn: cn=svc_backup,cn=Users,dc=rootpath,dc=local
+cn: svc_backup
+sAMAccountName: svc_backup
+description:: UlB7YWRfbGRhcF9lbnVtXzI5NTk3Y30=
+
+dn: cn=j.smith,cn=Users,dc=rootpath,dc=local
+cn: j.smith
+description: usuario estandar
+

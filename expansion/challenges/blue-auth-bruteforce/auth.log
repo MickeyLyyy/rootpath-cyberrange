@@ -1,0 +1,9 @@
+Aug 10 03:00:10 server sshd[1000]: Failed password for invalid user admin from 203.0.113.66 port 40000 ssh2
+Aug 10 03:01:11 server sshd[1001]: Failed password for invalid user admin from 203.0.113.66 port 40001 ssh2
+Aug 10 03:02:12 server sshd[1002]: Failed password for invalid user admin from 203.0.113.66 port 40002 ssh2
+Aug 10 03:03:13 server sshd[1003]: Failed password for invalid user admin from 203.0.113.66 port 40003 ssh2
+Aug 10 03:04:14 server sshd[1004]: Failed password for invalid user admin from 203.0.113.66 port 40004 ssh2
+Aug 10 03:05:15 server sshd[1005]: Failed password for invalid user admin from 203.0.113.66 port 40005 ssh2
+Aug 10 03:02:10 server sshd[1100]: Accepted password for webadmin from 203.0.113.66 port 44444 ssh2
+Aug 10 03:02:44 server sudo: webadmin : TTY=pts/0 ; PWD=/var/www ; USER=root ; COMMAND=/bin/bash -c "echo UlB7Ymx1ZV9hdXRoX2M1MmQ0OH0= > /tmp/.cache"
+Aug 10 03:03:01 server sshd[1100]: pam_unix(sshd:session): session closed for user webadmin

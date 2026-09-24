@@ -1,0 +1,50 @@
+[
+  {
+    "slug": "ad-ldap-enum",
+    "title": "Enumeracion LDAP anonima",
+    "cert": "Pentesting de Active Directory (PNPT)",
+    "domain": "Enumeracion de Active Directory"
+  },
+  {
+    "slug": "ad-bloodhound",
+    "title": "Ruta a Domain Admin",
+    "cert": "Pentesting de Active Directory (PNPT)",
+    "domain": "Enumeracion de Active Directory"
+  },
+  {
+    "slug": "ad-kerberoast",
+    "title": "Kerberoasting",
+    "cert": "Pentesting de Active Directory (PNPT)",
+    "domain": "Ataques a credenciales"
+  },
+  {
+    "slug": "ad-asrep",
+    "title": "AS-REP Roasting",
+    "cert": "Pentesting de Active Directory (PNPT)",
+    "domain": "Ataques a credenciales"
+  },
+  {
+    "slug": "ad-cred-reuse",
+    "title": "Reutilizacion de credenciales",
+    "cert": "Pentesting de Active Directory (PNPT)",
+    "domain": "Movimiento lateral"
+  },
+  {
+    "slug": "blue-web-log",
+    "title": "Exfiltracion en logs web",
+    "cert": "Blue Team (BTL1)",
+    "domain": "Analisis de logs"
+  },
+  {
+    "slug": "blue-auth-bruteforce",
+    "title": "Fuerza bruta y persistencia",
+    "cert": "Blue Team (BTL1)",
+    "domain": "Analisis de logs"
+  },
+  {
+    "slug": "blue-dns-exfil",
+    "title": "Exfiltracion por DNS",
+    "cert": "Blue Team (BTL1)",
+    "domain": "Forense de red"
+  }
+]

@@ -1,0 +1,3 @@
+# Zeek dns.log (columnas: ts id orig query)
+1.000	C1	203.0.113.66	kjihwytmovsv6zdo.exfil.rootpath.local
+2.000	C1	203.0.113.66	onptsy3gguzdi7i.exfil.rootpath.local

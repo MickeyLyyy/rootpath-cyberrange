@@ -240,3 +240,36 @@ def agent_map():
         db.session.add(RootPathMap(challenge_id=ch.id, domain_id=dom.id))
         db.session.commit()
     return jsonify({"success": True, "challenge_id": ch.id, "domain_id": dom.id})
+
+
+@bp.route("/api/analytics")
+@authed_only
+def analytics():
+    chs = Challenges.query.all()
+    users = Users.query.count()
+    solves = Solves.query.all()
+    per = {}
+    for s in solves:
+        per[s.challenge_id] = per.get(s.challenge_id, 0) + 1
+    val = {c.id: c.value for c in chs}
+    rows = []
+    for c in chs:
+        sc = per.get(c.id, 0)
+        rate = round(100.0 * sc / max(1, users), 1)
+        rows.append({"id": c.id, "name": c.name, "category": c.category, "value": c.value,
+                     "solves": sc, "solve_rate": rate, "flag": (rate < 10.0 and users > 1)})
+    hardest = sorted(rows, key=lambda r: r["solve_rate"])[:12]
+    cats = {}
+    for r in rows:
+        cc = cats.setdefault(r["category"], {"category": r["category"], "challenges": 0, "solves": 0})
+        cc["challenges"] += 1; cc["solves"] += r["solves"]
+    bycat = sorted(cats.values(), key=lambda x: -x["solves"])
+    uscore = {}
+    for s in solves:
+        uscore[s.user_id] = uscore.get(s.user_id, 0) + val.get(s.challenge_id, 0)
+    unames = {u.id: u.name for u in Users.query.all()}
+    top = [{"user": unames.get(uid, "?"), "score": sc} for uid, sc in sorted(uscore.items(), key=lambda x: -x[1])[:10]]
+    return jsonify({"success": True, "data": {
+        "challenges": len(chs), "users": users, "solves": len(solves),
+        "hint_unlocks": HintUnlocks.query.count(),
+        "hardest": hardest, "by_category": bycat, "top_users": top}})

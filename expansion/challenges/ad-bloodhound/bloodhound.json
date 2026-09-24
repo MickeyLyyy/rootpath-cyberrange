@@ -1,0 +1,53 @@
+{
+  "users": [
+    {
+      "name": "ADMINISTRATOR@ROOTPATH.LOCAL",
+      "properties": {
+        "admincount": 1
+      }
+    },
+    {
+      "name": "HELPDESK@ROOTPATH.LOCAL",
+      "properties": {
+        "description": "Y3VlbnRhIGRlIHNvcG9ydGU="
+      }
+    },
+    {
+      "name": "J.SMITH@ROOTPATH.LOCAL",
+      "properties": {
+        "description": "UlB7YWRfYmxvb2Rob3VuZF9mNDE4OWV9"
+      }
+    },
+    {
+      "name": "SVC_BACKUP@ROOTPATH.LOCAL",
+      "properties": {
+        "description": "c2VydmljaW8gZGUgYmFja3Vwcw=="
+      }
+    }
+  ],
+  "groups": [
+    {
+      "name": "DOMAIN ADMINS@ROOTPATH.LOCAL"
+    },
+    {
+      "name": "DOMAIN CONTROLLERS@ROOTPATH.LOCAL"
+    }
+  ],
+  "computers": [
+    {
+      "name": "DC01.ROOTPATH.LOCAL"
+    }
+  ],
+  "edges": [
+    {
+      "source": "J.SMITH@ROOTPATH.LOCAL",
+      "target": "DOMAIN CONTROLLERS@ROOTPATH.LOCAL",
+      "label": "AdminTo"
+    },
+    {
+      "source": "HELPDESK@ROOTPATH.LOCAL",
+      "target": "J.SMITH@ROOTPATH.LOCAL",
+      "label": "GenericAll"
+    }
+  ]
+}

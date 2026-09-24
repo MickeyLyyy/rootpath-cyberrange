@@ -1,0 +1,1 @@
+$krb5tgs$23$*svc_backup$ROOTPATH.LOCAL$MSSQLSvc/db01.rootpath.local:1433*$113e32f1a1be706600ec06a8402a11cb$28e6f6f0171ed014e43d3afe9677ea3759e3c574009fa4496fbcc3a3b71c37b6a95642ecac4baa1e55530bbbf9e0d93a
