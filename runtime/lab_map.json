@@ -46,5 +46,11 @@
     "image": "rootpath-v2-innovaerp-panel",
     "internal_port": 5000,
     "kind": "web"
+  },
+  "NimbusDrive - Almacenamiento en la Nube": {
+    "service": "nimbusdrive",
+    "image": "rootpath-v2-nimbusdrive",
+    "internal_port": 5000,
+    "kind": "web"
   }
 }

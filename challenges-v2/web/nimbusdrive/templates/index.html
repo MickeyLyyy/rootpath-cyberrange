@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NimbusDrive · Almacenamiento en la Nube</title>
+<link rel="stylesheet" href="/static/bootstrap.min.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark nd-nav">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/">&#9729; NimbusDrive</a>
+    <div class="ms-auto"><a class="btn btn-sm btn-light" href="#">Iniciar sesi&oacute;n</a></div>
+  </div>
+</nav>
+<div class="container py-5">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <h1 class="h3 mb-1">Tus archivos, en la nube</h1>
+      <p class="text-muted">Comparte, exporta y organiza. Plan Corporativo &middot; 2TB</p>
+      <div class="card">
+        <div class="card-header">Archivos</div>
+        <ul class="list-group list-group-flush" id="files">
+          <li class="list-group-item d-flex justify-content-between">factura_enero.pdf
+            <button class="btn btn-sm btn-outline-primary" onclick="exportFile('factura_enero.pdf')">Exportar</button></li>
+          <li class="list-group-item d-flex justify-content-between">contrato.docx
+            <button class="btn btn-sm btn-outline-primary" onclick="exportFile('contrato.docx')">Exportar</button></li>
+          <li class="list-group-item d-flex justify-content-between">logo.png
+            <button class="btn btn-sm btn-outline-primary" onclick="exportFile('logo.png')">Exportar</button></li>
+        </ul>
+      </div>
+      <div class="card mt-3"><div class="card-header">Salida</div>
+        <pre class="p-3 mb-0" id="out" style="min-height:120px"></pre></div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card"><div class="card-body">
+        <h6 class="text-uppercase text-muted">Estado del servicio</h6>
+        <p class="mb-1"><span class="badge bg-success">Operativo</span> v2.7.0</p>
+        <hr>
+        <p class="small text-muted mb-0">API v2 &middot; endpoint de exportaci&oacute;n /api/v2/files/export</p>
+      </div></div>
+    </div>
+  </div>
+</div>
+<footer class="nd-foot text-center py-4 small">NimbusDrive &copy; 2026 &middot; Soporte: soporte@nimbusdrive.do</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>
