@@ -659,16 +659,17 @@ def lab_control():
                         "detail": data}), 500
 
     now = datetime.utcnow()
+    actual_port = int(data.get("host_port") or port)
     inst = RootPathLabInstance(
         user_id=user.id, user_name=(user.name or "")[:128],
         challenge_id=cid, challenge_name=name, service=meta.get("service"),
         image=meta.get("image"), container_name=data.get("container"),
-        host_port=port, internal_port=meta.get("internal_port"), kind=meta.get("kind"),
+        host_port=actual_port, internal_port=meta.get("internal_port"), kind=meta.get("kind"),
         created_at=now, expires_at=now + timedelta(minutes=_lab_ttl_minutes()), status="running")
     db.session.add(inst)
     db.session.commit()
     _log_lab_action(user, action, name, "ok", service=meta.get("service"))
-    return jsonify({"success": True, "action": action, "host_port": port,
+    return jsonify({"success": True, "action": action, "host_port": actual_port,
                     "container": inst.container_name, "connection": _instance_conn(inst),
                     "remaining": _lab_ttl_minutes() * 60})
 

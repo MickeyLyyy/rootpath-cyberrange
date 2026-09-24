@@ -1,8 +1,50 @@
 {
-  "El Colmadón de la Duarte":    {"service": "el-colmadon-de-la-duarte",    "image": "rootpath-v2-el-colmadon-de-la-duarte",    "internal_port": 5000, "kind": "web"},
-  "El Parqueo del Boulevard":    {"service": "el-parqueo-del-boulevard",    "image": "rootpath-v2-el-parqueo-del-boulevard",    "internal_port": 5000, "kind": "web"},
-  "La Banca del Malecón":        {"service": "la-banca-del-malecon",        "image": "rootpath-v2-la-banca-del-malecon",        "internal_port": 5000, "kind": "web"},
-  "El Servidor de la Cafetería": {"service": "el-servidor-de-la-cafeteria", "image": "rootpath-v2-el-servidor-de-la-cafeteria", "internal_port": 2222, "kind": "linux", "ssh_user": "player", "ssh_pass": "player"},
-  "El Backup de Medianoche":     {"service": "el-backup-de-medianoche",     "image": "rootpath-v2-el-backup-de-medianoche",     "internal_port": 2222, "kind": "linux", "ssh_user": "player", "ssh_pass": "player"},
-  "El Admin de la Residencia":   {"service": "el-admin-de-la-residencia",   "image": "rootpath-v2-el-admin-de-la-residencia",   "internal_port": 2222, "kind": "linux", "ssh_user": "player", "ssh_pass": "player"}
+  "El Colmadón de la Duarte": {
+    "service": "el-colmadon-de-la-duarte",
+    "image": "rootpath-v2-el-colmadon-de-la-duarte",
+    "internal_port": 5000,
+    "kind": "web"
+  },
+  "El Parqueo del Boulevard": {
+    "service": "el-parqueo-del-boulevard",
+    "image": "rootpath-v2-el-parqueo-del-boulevard",
+    "internal_port": 5000,
+    "kind": "web"
+  },
+  "La Banca del Malecón": {
+    "service": "la-banca-del-malecon",
+    "image": "rootpath-v2-la-banca-del-malecon",
+    "internal_port": 5000,
+    "kind": "web"
+  },
+  "El Servidor de la Cafetería": {
+    "service": "el-servidor-de-la-cafeteria",
+    "image": "rootpath-v2-el-servidor-de-la-cafeteria",
+    "internal_port": 2222,
+    "kind": "linux",
+    "ssh_user": "player",
+    "ssh_pass": "player"
+  },
+  "El Backup de Medianoche": {
+    "service": "el-backup-de-medianoche",
+    "image": "rootpath-v2-el-backup-de-medianoche",
+    "internal_port": 2222,
+    "kind": "linux",
+    "ssh_user": "player",
+    "ssh_pass": "player"
+  },
+  "El Admin de la Residencia": {
+    "service": "el-admin-de-la-residencia",
+    "image": "rootpath-v2-el-admin-de-la-residencia",
+    "internal_port": 2222,
+    "kind": "linux",
+    "ssh_user": "player",
+    "ssh_pass": "player"
+  },
+  "InnovaERP - Panel Corporativo": {
+    "service": "innovaerp-panel",
+    "image": "rootpath-v2-innovaerp-panel",
+    "internal_port": 5000,
+    "kind": "web"
+  }
 }

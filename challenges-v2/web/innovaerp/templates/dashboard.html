@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% set active = 'panel' %}{% set title = 'Escritorio' %}
+{% block body %}
+<div class="row g-3">
+  <div class="col-md-3"><div class="card stat"><div class="k">Ventas hoy</div><div class="v">RD$ 128,540</div></div></div>
+  <div class="col-md-3"><div class="card stat"><div class="k">Clientes</div><div class="v">1,204</div></div></div>
+  <div class="col-md-3"><div class="card stat"><div class="k">Facturas</div><div class="v">87</div></div></div>
+  <div class="col-md-3"><div class="card stat"><div class="k">Alertas</div><div class="v text-danger">2</div></div></div>
+</div>
+<div class="card mt-3">
+  <div class="card-header">Actividad reciente</div>
+  <div class="card-body">
+    <table class="table table-sm mb-0">
+      <thead><tr><th>#</th><th>Evento</th><th>Usuario</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr><td>FA-10231</td><td>Factura generada</td><td>jperez</td><td><span class="badge bg-success">OK</span></td></tr>
+        <tr><td>CL-0442</td><td>Nuevo cliente</td><td>mlopez</td><td><span class="badge bg-success">OK</span></td></tr>
+        <tr><td>IN-0091</td><td>Stock bajo</td><td>sistema</td><td><span class="badge bg-warning text-dark">Revisar</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

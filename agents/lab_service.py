@@ -31,6 +31,28 @@ def _run(args, t=180):
     return subprocess.run(args, capture_output=True, text=True, timeout=t)
 
 
+def _used_ports():
+    r = _run(["docker", "ps", "--format", "{{.Ports}}"])
+    used = set()
+    for m in re.finditer(r"0\.0\.0\.0:(\d+)->", r.stdout or ""):
+        used.add(int(m.group(1)))
+    return used
+
+
+def _pick_port(pref):
+    used = _used_ports()
+    try:
+        pref = int(pref)
+    except Exception:
+        pref = 0
+    if PORT_MIN <= pref <= PORT_MAX and pref not in used:
+        return pref
+    for p in range(PORT_MIN, PORT_MAX + 1):
+        if p not in used:
+            return p
+    return None
+
+
 def _state(cname):
     r = _run(["docker", "ps", "-a", "--filter", "name=^/%s$" % cname, "--format", "{{.State}}"])
     lines = [l.strip() for l in r.stdout.strip().splitlines() if l.strip()]
@@ -98,19 +120,16 @@ class H(BaseHTTPRequestHandler):
             e = _entry(name)
             if not e:
                 return self._send(404, {"error": "no lab", "name": name})
-            try:
-                host_port = int(host_port)
-            except Exception:
-                return self._send(400, {"error": "host_port invalido"})
-            if not (PORT_MIN <= host_port <= PORT_MAX):
-                return self._send(400, {"error": "host_port fuera de rango"})
+            port = _pick_port(host_port)
+            if not port:
+                return self._send(503, {"error": "sin puertos libres"})
             cname = _cname(e["service"], uid)
-            r = deploy(e, cname, host_port, flag)
+            r = deploy(e, cname, port, flag)
             if r.returncode != 0:
                 return self._send(200, {"ok": False, "out": (r.stdout + r.stderr)[-300:]})
             return self._send(200, {"ok": True, "container": cname, "service": e["service"],
                                     "image": e["image"], "internal_port": e["internal_port"],
-                                    "kind": e.get("kind"), "host_port": host_port})
+                                    "kind": e.get("kind"), "host_port": port})
         if u.path == "/lab/destroy":
             b = self._body()
             name = b.get("name"); uid = b.get("uid"); cname = b.get("container")

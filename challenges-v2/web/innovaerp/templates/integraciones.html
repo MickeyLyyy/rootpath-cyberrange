@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% set active = 'inte' %}{% set title = 'Integraciones' %}
+{% block body %}
+<div class="card">
+  <div class="card-header">Bus de servicios interno</div>
+  <div class="card-body">
+    <p class="text-muted">Endpoint del bus de eventos (red interna): <code>{{ internal }}</code></p>
+    <div class="mb-3">
+      <label class="form-label">Token del bus</label>
+      <div class="input-group">
+        <input class="form-control" readonly value="{{ token }}" id="busToken">
+        <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText(document.getElementById('busToken').value)">Copiar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header">Probador de Webhooks</div>
+  <div class="card-body">
+    <p class="text-muted small">Env&iacute;a una petici&oacute;n de prueba a una URL (por ejemplo, tu integraci&oacute;n).</p>
+    <div class="row g-2">
+      <div class="col-md-6"><input class="form-control" id="whUrl" placeholder="https://tu-servicio.do/hook"></div>
+      <div class="col-md-4"><input class="form-control" id="whHeaders" placeholder='headers JSON, ej {"X-Token":"..."}'></div>
+      <div class="col-md-2"><button class="btn btn-primary w-100" onclick="testWebhook()">Probar</button></div>
+    </div>
+    <pre id="whOut" class="mt-3 p-3 bg-light border rounded" style="min-height:80px"></pre>
+  </div>
+</div>
+{% endblock %}

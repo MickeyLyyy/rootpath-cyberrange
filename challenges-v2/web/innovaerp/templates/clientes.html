@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% set active = 'clientes' %}{% set title = 'Clientes' %}
+{% block body %}
+<div class="card">
+  <div class="card-header d-flex justify-content-between">
+    <span>Clientes registrados</span>
+    <button class="btn btn-sm btn-primary">+ Nuevo cliente</button>
+  </div>
+  <div class="card-body">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>ID</th><th>Nombre</th><th>RNC</th><th>Balance</th></tr></thead>
+      <tbody>
+        <tr><td>CL-0001</td><td>Colmado La Esquina</td><td>101-00021-4</td><td>RD$ 4,210</td></tr>
+        <tr><td>CL-0002</td><td>Ferreter&iacute;a del Este</td><td>101-88765-1</td><td>RD$ 12,900</td></tr>
+        <tr><td>CL-0003</td><td>Farmacia Central</td><td>130-12345-9</td><td>RD$ 845</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
