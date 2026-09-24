@@ -1,0 +1,18 @@
+.rp-cert{border:1px solid rgba(128,128,128,.35);border-radius:10px;padding:14px 16px;margin:14px 0;background:rgba(128,128,128,.06)}
+.rp-cert-h{display:flex;justify-content:space-between;align-items:center}
+.rp-cert-h h3{margin:0}
+.rp-badge{background:#7c3aed;color:#fff;border-radius:999px;padding:2px 12px;font-weight:700}
+.rp-desc{opacity:.8;margin:6px 0}
+.rp-bar{height:8px;background:rgba(128,128,128,.25);border-radius:999px;overflow:hidden;margin:8px 0 4px}
+.rp-bar i{display:block;height:100%;background:linear-gradient(90deg,#7c3aed,#22c55e)}
+.rp-dom{margin:6px 0;border-top:1px dashed rgba(128,128,128,.3);padding-top:6px}
+.rp-dom summary{cursor:pointer;font-weight:600}
+.rp-list{list-style:none;padding-left:14px;margin:6px 0}
+.rp-list li{margin:3px 0}
+.rp-list li.rp-ok{color:#22c55e}
+.rp-list small{opacity:.65}
+.rp-btn{background:#7c3aed;color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;margin-top:8px}
+.rp-btn.rp-danger{background:#dc2626}
+.rp-warn{color:#f59e0b;font-weight:600}
+.rp-timer{font-size:1.1em}
+.rp-exam-start label{margin-right:10px}
