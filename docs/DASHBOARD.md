@@ -21,3 +21,14 @@ UI standalone integrada como plugin CTFd, accesible en:
 ## Notas
 - El desbloqueo de pistas usa POST /api/v1/unlocks con type="hints" (nombre de tabla que espera CTFd).
 - "Entornos efimeros por usuario" (TTL, VLAN) siguen pendientes: Fase 1.
+
+## Actualizacion: botones funcionales + UI unica
+- Botones Abrir/Parar/Reiniciar = control REAL del contenedor del reto:
+  - Plugin: POST /plugins/rootpath/api/lab/control {name, action:start|stop|restart}
+  - Estado:  GET /plugins/rootpath/api/lab/status?name=...
+  - Backend: servicio systemd `rootpath-lab` (puerto 9001, protegido por X-Agent-Key),
+    allowlist en runtime/lab_map.json (reto -> servicio docker).
+- Retos sin servicio (estaticos, AD, Blue) -> botones deshabilitados ("sin servicio").
+- Aterrizaje: al estar autenticado, `/` redirige al dashboard.
+- UI unica: ocultas las paginas antiguas (rutas, modo-examen, analiticas, writeup-template, index);
+  unica pagina visible: "Cyber Range".
