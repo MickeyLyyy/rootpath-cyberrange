@@ -138,6 +138,8 @@
       <button class="nav-btn" data-page="analiticas"><span class="nav-icon">▥</span><span class="nav-label">Analíticas</span></button>
       <button class="nav-btn" data-page="writeups"><span class="nav-icon">✎</span><span class="nav-label">Writeups</span></button>
       <button class="nav-btn" data-page="usuarios"><span class="nav-icon">◎</span><span class="nav-label">Usuarios</span></button>
+      <button class="nav-btn" data-page="auditoria" id="navAudit" style="display:none"><span class="nav-icon">▤</span><span class="nav-label">Auditoría</span></button>
+      <button class="nav-btn" id="navAdmin" style="display:none" onclick="window.location='/plugins/rootpath/admin'"><span class="nav-icon">⚙</span><span class="nav-label">Panel Admin</span></button>
     </nav>
     <div class="sidebar-bottom">
       <div class="mini-card">
@@ -203,6 +205,10 @@
                   <div class="stat card"><div class="label">Estado</div><div class="value" style="font-size:22px" id="ch-state">—</div></div>
                 </div>
               </div>
+              <div class="card card-pad" id="ch-files-card" style="display:none">
+                <div class="card-head"><h3>Archivos del reto</h3><span class="chip blue">Descarga</span></div>
+                <div class="rows" id="ch-files"></div>
+              </div>
               <div class="card card-pad">
                 <div class="card-head"><h3>Pistas</h3><span class="tiny muted">Se descuentan puntos al desbloquear</span></div>
                 <div id="ch-hints"><div class="tiny muted">Sin pistas.</div></div>
@@ -218,6 +224,7 @@
                 <div class="lab-row"><span>Plataforma</span><strong id="labState">· cargando</strong></div>
                 <div class="lab-row"><span>Endpoint</span><strong id="labEndpoint" style="text-align:right;max-width:60%;word-break:break-all">—</strong></div>
                 <div class="lab-row"><span>Servicio</span><strong id="labService">—</strong></div>
+                <div class="lab-row"><span>Tiempo restante</span><strong id="labRemain">—</strong></div>
                 <div class="lab-row"><span>Nodo · CPU</span><strong id="nodeCpu">—</strong></div>
                 <div class="lab-row"><span>Nodo · RAM</span><strong id="nodeRam">—</strong></div>
               </div>
@@ -226,7 +233,7 @@
                 <button class="btn danger" id="closeBtn" onclick="labAction('stop')">■ Parar</button>
                 <button class="btn purple" id="restartBtn" onclick="labAction('restart')">↻ Reiniciar</button>
               </div>
-              <div class="mini-card" style="margin-top:18px"><div class="tiny" style="line-height:1.6"><strong>Control real:</strong> Abrir/Parar/Reiniciar actúa sobre el contenedor del reto. Los entornos efímeros por usuario llegan en la Fase 1.</div></div>
+              <div class="mini-card" style="margin-top:18px"><div class="tiny" style="line-height:1.6"><strong>Tu instancia:</strong> <b>Abrir</b> crea un contenedor <u>exclusivo para ti</u> en un puerto propio (TTL 60 min). Al acertar la flag se cierra al instante; o se apaga solo al terminar el cronómetro. <b>Parar</b> lo tumba antes.</div></div>
               <div style="height:20px"></div>
               <div class="card-head"><h3>Registro</h3><button class="btn ghost" onclick="clearLog()">Limpiar</button></div>
               <div class="log" id="labLog"></div>
@@ -295,11 +302,28 @@
       <section id="usuarios" class="page">
         <div class="page-head">
           <div><div class="kicker">Administración</div><h2>Usuarios</h2><p>Estado de cuentas y actividad.</p></div>
-          <button class="btn primary" onclick="notify('La gestión de usuarios es solo para administradores')">Gestionar</button>
+          <button class="btn primary" onclick="manageUsers()">Gestionar</button>
         </div>
         <div class="card card-pad">
           <div class="card-head"><h3>Top usuarios por puntuación</h3><span class="chip" id="usr-count">—</span></div>
           <div style="overflow:auto"><table><thead><tr><th>#</th><th>Usuario</th><th>Puntuación</th></tr></thead><tbody id="usr-body"><tr><td colspan="3" class="muted tiny">Cargando…</td></tr></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- AUDITORIA (solo administradores) -->
+      <section id="auditoria" class="page">
+        <div class="page-head">
+          <div><div class="kicker">Trazabilidad</div><h2>Auditoría de laboratorios</h2><p>Quién desplegó, tumbó o reinició cada contenedor, con su id de usuario único y su IP de origen.</p></div>
+          <div class="actions">
+            <input class="input" id="audChallenge" placeholder="Reto…" style="width:170px" />
+            <select class="input" id="audAction" style="width:150px"><option value="">Acción: todas</option><option value="start">Abrir</option><option value="stop">Parar</option><option value="restart">Reiniciar</option></select>
+            <button class="btn primary" onclick="loadAudit()">Actualizar</button>
+          </div>
+        </div>
+        <div class="grid grid-4" id="aud-stats"></div>
+        <div class="card card-pad" style="margin-top:24px">
+          <div class="card-head"><h3>Registro de acciones</h3><span class="chip" id="aud-count">—</span></div>
+          <div style="overflow:auto"><table><thead><tr><th>Fecha (UTC)</th><th>Usuario</th><th>ID</th><th>IP</th><th>Acción</th><th>Servicio</th><th>Resultado</th></tr></thead><tbody id="aud-body"><tr><td colspan="7" class="muted tiny">Cargando…</td></tr></tbody></table></div>
         </div>
       </section>
     </div>
@@ -309,8 +333,8 @@
 <div class="toast" id="toast"></div>
 <script>
 const CSRF=document.querySelector('meta[name="csrf-token"]').content;
-const meta={desafios:["Desafíos","Entrena, explora y resuelve los retos del cyber range."],rutas:["Rutas","Avanza por dominios, objetivos y certificaciones."],examen:["Modo Examen","Simulaciones cronometradas con reglas estrictas."],analiticas:["Analíticas","Métricas de aprendizaje, dificultad y operación."],writeups:["Writeups","Tu base de conocimiento técnica."],usuarios:["Usuarios","Administración y actividad de la comunidad."]};
-let CATALOG=[],PATHS=[],ANALYTICS=null,STATUS=null,SELECTED=null,CURCAT=null;
+const meta={desafios:["Desafíos","Entrena, explora y resuelve los retos del cyber range."],rutas:["Rutas","Avanza por dominios, objetivos y certificaciones."],examen:["Modo Examen","Simulaciones cronometradas con reglas estrictas."],analiticas:["Analíticas","Métricas de aprendizaje, dificultad y operación."],writeups:["Writeups","Tu base de conocimiento técnica."],usuarios:["Usuarios","Administración y actividad de la comunidad."],auditoria:["Auditoría","Quién desplegó, tumbó o reinició cada laboratorio (solo administradores)."]};
+let CATALOG=[],PATHS=[],ANALYTICS=null,STATUS=null,SELECTED=null,CURCAT=null,IS_ADMIN=false;
 const CAT_ICON={Web:"◧",Linux:"⌘",AD:"⬡",Blue:"▦",Crypto:"◇",Forensics:"◈"};
 function notify(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(window.__tt);window.__tt=setTimeout(()=>t.classList.remove('show'),2400);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -321,7 +345,8 @@ function screen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.
 function go(id){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.page===id));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.getElementById('topTitle').textContent=meta[id][0];document.getElementById('topSub').textContent=meta[id][1];window.scrollTo({top:0,behavior:'smooth'});}
 document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
 
-async function loadProfile(){const r=await api('/api/v1/users/me');if(r.status===200&&r.json&&r.json.data){const u=r.json.data;document.getElementById('uname').textContent=u.name;document.getElementById('avatar').textContent=(u.name||'?').charAt(0).toUpperCase();document.getElementById('urole').textContent=(u.type==='admin')?'Administrador':(u.team_id?'Equipo':'Estudiante');}}
+async function loadProfile(){const r=await api('/plugins/rootpath/api/me');if(r.status===200&&r.json&&r.json.success){const u=r.json;IS_ADMIN=!!u.admin;document.getElementById('uname').textContent=u.name||'—';document.getElementById('avatar').textContent=(u.name||'?').charAt(0).toUpperCase();document.getElementById('urole').textContent=IS_ADMIN?'Administrador':'Estudiante';const nb=document.getElementById('navAudit');if(nb)nb.style.display=IS_ADMIN?'flex':'none';const na=document.getElementById('navAdmin');if(na)na.style.display=IS_ADMIN?'flex':'none';if(IS_ADMIN)loadAudit();}}
+function manageUsers(){if(IS_ADMIN){window.location='/admin/users';}else{notify('La gestión de usuarios es solo para administradores');}}
 
 async function loadCatalog(){
   const r=await api('/plugins/rootpath/api/catalog');
@@ -381,6 +406,9 @@ function renderChallenge(){
   const h=document.getElementById('ch-hints');
   if(!c.hints||!c.hints.length){h.innerHTML='<div class="tiny muted">Sin pistas.</div>';}
   else h.innerHTML=c.hints.map((x,i)=>{const u=x.content!=null;return '<div class="hint" id="hint-'+x.id+'"><button onclick="toggleHint('+x.id+')"><span><strong>Pista '+(i+1)+'</strong> <span class="muted">· '+x.cost+' pts</span></span><span>'+(u?'▾':'🔒')+'</span></button><div class="hint-body">'+(u?esc(x.content):'<button class="btn" onclick="unlockHint('+x.id+')">Desbloquear ('+x.cost+' pts)</button>')+'</div></div>';}).join('');
+  const files=c.files||[],fc=document.getElementById('ch-files-card');
+  if(files.length){fc.style.display='';document.getElementById('ch-files').innerHTML=files.map(f=>'<div class="row" style="cursor:default"><div><div class="row-title">'+esc(f.name)+'</div><div class="row-sub">archivo adjunto del reto</div></div><a class="btn primary" href="'+esc(f.url)+'" download>↓ Descargar</a></div>').join('');}
+  else fc.style.display='none';
   loadLab(c.name);
 }
 function toggleHint(id){const el=document.getElementById('hint-'+id);if(el)el.classList.toggle('open');}
@@ -394,12 +422,28 @@ async function submitFlag(){
   else notify('Respuesta: '+(r.json&&r.json.data&&r.json.data.message?r.json.data.message:r.status));
 }
 // laboratorio
-let LAB=null;
+let LAB=null,LABTIMER=null;
 function setLabButtons(on){['openBtn','closeBtn','restartBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=!on;});}
-async function loadLab(name){LAB=null;setLabButtons(false);const svc=document.getElementById('labService');if(svc)svc.textContent='—';if(!name)return;
+function setLabCountdown(secs){
+  if(LABTIMER){clearInterval(LABTIMER);LABTIMER=null;}
+  const el=document.getElementById('labRemain');if(!el)return;
+  if(!secs||secs<=0){el.textContent='—';return;}
+  let rem=secs;
+  const fmt=()=>{const h=Math.floor(rem/3600),m=Math.floor((rem%3600)/60),s=rem%60;return (h>0?h+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');};
+  el.innerHTML='<span style="color:var(--cyan)">'+fmt()+'</span>';
+  LABTIMER=setInterval(()=>{rem--;if(rem<=0){clearInterval(LABTIMER);LABTIMER=null;el.innerHTML='<span style="color:var(--amber)">expirado</span>';if(LAB&&LAB.name)loadLab(LAB.name);}else el.innerHTML='<span style="color:var(--cyan)">'+fmt()+'</span>';},1000);
+}
+async function loadLab(name){LAB=null;setLabButtons(false);setLabCountdown(0);const svc=document.getElementById('labService');if(svc)svc.textContent='—';const ep=document.getElementById('labEndpoint');if(!name)return;
   const r=await api('/plugins/rootpath/api/lab/status?name='+encodeURIComponent(name));
-  if(r.status===200&&r.json&&r.json.service){LAB=r.json;if(svc)svc.innerHTML=r.json.running?'<span class="status-dot"></span> en ejecución':'<span style="color:var(--muted)">detenido</span>';setLabButtons(true);}
-  else if(svc)svc.textContent='sin servicio (reto estático)';}
+  const j=r.json||{};
+  if(r.status===200&&j.configured){LAB=j;setLabButtons(true);
+    if(svc)svc.innerHTML=j.running?'<span class="status-dot"></span> tu instancia activa':(j.deployed?'<span style="color:var(--amber)">detenida</span>':'<span style="color:var(--muted)">sin desplegar</span>');
+    if(ep)ep.textContent=j.connection?j.connection:'(pulsa Abrir para obtener tu instancia)';
+    setLabCountdown(j.running?(j.remaining||0):0);
+  }else{
+    if(svc)svc.textContent='sin servicio (reto estático)';
+    if(ep)ep.textContent='adjunto / ver reto';
+  }}
 async function labAction(a){if(!LAB){notify('Este reto no tiene servicio controlable');return;}notify('Acción: '+a+'…');log('info','Laboratorio '+a+' · '+LAB.service);
   const r=await api('/plugins/rootpath/api/lab/control',{method:'POST',body:JSON.stringify({name:LAB.name,action:a})});
   if(r.status===200&&r.json&&r.json.ok){notify('OK · '+a);log('ok','Laboratorio '+a+' correcto');}else{notify('Fallo al '+a);log('bad','Fallo '+a);}
@@ -418,6 +462,29 @@ async function loadAnalytics(){const r=await api('/plugins/rootpath/api/analytic
   document.getElementById('an-hard').innerHTML=d.hardest.slice(0,6).map(c=>'<div class="row" style="cursor:default"><div><div class="row-title">'+esc(c.name)+'</div><div class="row-sub">'+c.solves+' solves · '+c.solve_rate+'%</div></div>'+(c.flag?'<span class="badge">REVISAR</span>':'<span style="color:var(--green)">OK</span>')+'</div>').join('')||'<div class="tiny muted">Sin datos.</div>';
   document.getElementById('usr-body').innerHTML=d.top_users.map((u,i)=>'<tr><td>'+(i+1)+'</td><td><strong>'+esc(u.user)+'</strong></td><td>'+u.score+' pts</td></tr>').join('')||'<tr><td colspan="3" class="tiny muted">Sin datos.</td></tr>';
   document.getElementById('usr-count').textContent=d.users+' usuarios';}
+// auditoria de laboratorios (solo admin)
+function audBadge(x){if(!x)return '';if(x.indexOf('ok')===0)return '<span class="chip green">'+esc(x)+'</span>';if(x.indexOf('denied')===0)return '<span class="chip" style="color:#f5c96a;border-color:rgba(245,201,106,.4)">'+esc(x)+'</span>';return '<span class="chip" style="color:#ff8896;border-color:rgba(255,102,119,.4)">'+esc(x)+'</span>';}
+async function loadAudit(){
+  if(!IS_ADMIN)return;
+  const body=document.getElementById('aud-body');if(!body)return;
+  const chEl=document.getElementById('audChallenge'),acEl=document.getElementById('audAction');
+  const ch=chEl?chEl.value.trim():'',ac=acEl?acEl.value:'';
+  let qs='?limit=200';if(ch)qs+='&challenge='+encodeURIComponent(ch);if(ac)qs+='&action='+encodeURIComponent(ac);
+  const r=await api('/plugins/rootpath/api/lab/audit'+qs);
+  if(r.status!==200||!r.json||!r.json.data){body.innerHTML='<tr><td colspan="7" class="muted tiny">Sin acceso o sin datos.</td></tr>';document.getElementById('aud-stats').innerHTML='';document.getElementById('aud-count').textContent='—';return;}
+  const d=r.json.data;
+  const okc=d.filter(x=>x.result&&x.result.indexOf('ok')===0).length;
+  const errc=d.filter(x=>x.result&&x.result.indexOf('error')===0).length;
+  const denc=d.filter(x=>x.result&&x.result.indexOf('denied')===0).length;
+  const users=new Set(d.map(x=>x.user_id)).size;
+  document.getElementById('aud-stats').innerHTML=
+    '<div class="card stat"><div class="label">Acciones (total)</div><div class="value">'+r.json.total+'</div></div>'+
+    '<div class="card stat"><div class="label">Correctas</div><div class="value" style="color:var(--green)">'+okc+'</div></div>'+
+    '<div class="card stat"><div class="label">Con error</div><div class="value" style="color:var(--red)">'+errc+'</div></div>'+
+    '<div class="card stat"><div class="label">Denegadas · usuarios</div><div class="value" style="font-size:22px">'+denc+' · '+users+'</div></div>';
+  document.getElementById('aud-count').textContent=d.length+' de '+r.json.total;
+  body.innerHTML=d.map(x=>'<tr><td class="tiny">'+esc((x.created_at||'').replace('T',' ').replace('Z',''))+'</td><td><strong>'+esc(x.user_name||'—')+'</strong></td><td>'+x.user_id+'</td><td><code style="color:#8fd0ff">'+esc(x.ip||'—')+'</code></td><td>'+esc(x.action||'—')+'</td><td>'+esc(x.service||'—')+'</td><td>'+audBadge(x.result)+'</td></tr>').join('')||'<tr><td colspan="7" class="muted tiny">Sin registros.</td></tr>';
+}
 // estado plataforma
 async function loadStatus(){const r=await api('/plugins/rootpath/api/status');if(r.status!==200||!r.json)return;STATUS=r.json;const paused=r.json.deploy_paused;
   document.getElementById('labState').innerHTML=paused?'<span style="color:var(--amber)">En pausa por carga</span>':'<span class="status-dot"></span> Activa';

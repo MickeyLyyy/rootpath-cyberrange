@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RootPath — Bienvenida</title>
+<style>
+:root{
+  --bg:#061018;
+  --bg2:#091522;
+  --panel:#0d1925;
+  --line:#1d2e40;
+  --text:#eef6ff;
+  --muted:#91a6ba;
+  --blue:#4da3ff;
+  --cyan:#38dfcf;
+  --green:#42e396;
+  --purple:#9d7cff;
+  --red:#ff7485;
+  --amber:#f3c969;
+  --radius:20px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:
+    radial-gradient(circle at 10% 5%,rgba(77,163,255,.13),transparent 26%),
+    radial-gradient(circle at 90% 8%,rgba(157,124,255,.10),transparent 24%),
+    linear-gradient(180deg,#061018 0%,#07121c 52%,#08131d 100%);
+  color:var(--text);
+}
+a{text-decoration:none;color:inherit}
+button,input{font:inherit}
+button{cursor:pointer}
+.container{max-width:1240px;margin:auto;padding:0 28px}
+
+.header{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(16px);
+  background:rgba(6,16,24,.78);
+  border-bottom:1px solid rgba(29,46,64,.9);
+}
+.nav{
+  height:78px;display:flex;align-items:center;justify-content:space-between;gap:20px;
+}
+.brand{display:flex;align-items:center;gap:13px}
+.logo{
+  width:44px;height:44px;border-radius:13px;
+  display:grid;place-items:center;
+  color:var(--blue);font-weight:900;font-size:18px;
+  border:1px solid rgba(77,163,255,.55);
+  background:linear-gradient(135deg,rgba(77,163,255,.14),rgba(56,223,207,.04));
+  box-shadow:0 0 30px rgba(77,163,255,.12)
+}
+.brand strong{font-size:22px}
+.brand small{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:1.6px;margin-top:2px;font-weight:800}
+.nav-links{display:flex;gap:26px;color:#aebfd0;font-size:13px}
+.nav-links a:hover{color:#fff}
+.nav-actions{display:flex;gap:10px}
+.btn{
+  border:1px solid var(--line);
+  background:#0b1722;
+  color:var(--text);
+  border-radius:12px;
+  padding:11px 16px;
+  font-weight:800;
+  transition:.16s ease;
+}
+.btn:hover{transform:translateY(-1px);border-color:#36516c}
+.btn.primary{
+  background:linear-gradient(135deg,#2f8fff,#4da3ff);
+  border-color:transparent;
+  box-shadow:0 12px 28px rgba(77,163,255,.18);
+}
+.btn.ghost{background:transparent}
+
+.hero{
+  min-height:78vh;
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr);
+  align-items:center;
+  gap:60px;
+  padding:72px 0 64px;
+}
+.kicker{
+  font-size:12px;letter-spacing:1.9px;text-transform:uppercase;
+  color:var(--cyan);font-weight:900
+}
+.hero h1{
+  font-size:64px;line-height:1.02;letter-spacing:-2.5px;
+  margin:15px 0 20px;max-width:760px
+}
+.hero h1 span{
+  background:linear-gradient(90deg,#fff,#8fc7ff 45%,#66e3d3);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+.hero p{
+  max-width:720px;color:#a8bacb;font-size:17px;line-height:1.78;margin:0
+}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+
+.showcase{
+  position:relative;
+  min-height:500px;
+}
+.orbit{
+  position:absolute;inset:0;border-radius:50%;
+  border:1px solid rgba(77,163,255,.08);
+  transform:scale(.92)
+}
+.orbit:before,.orbit:after{
+  content:"";position:absolute;border-radius:50%;border:1px solid rgba(77,163,255,.05)
+}
+.orbit:before{inset:54px}.orbit:after{inset:108px}
+.core{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:190px;height:190px;border-radius:50%;
+  display:grid;place-items:center;text-align:center;
+  background:radial-gradient(circle at 35% 25%,rgba(77,163,255,.34),rgba(12,29,43,.96) 58%,#09131d);
+  border:1px solid rgba(77,163,255,.48);
+  box-shadow:0 0 90px rgba(77,163,255,.14), inset 0 0 40px rgba(77,163,255,.08);
+}
+.core strong{font-size:26px}
+.core span{display:block;color:#81bfff;font-size:11px;text-transform:uppercase;letter-spacing:1.7px;margin-top:7px}
+
+.float-card{
+  position:absolute;
+  min-width:190px;
+  border:1px solid var(--line);
+  background:rgba(10,23,35,.92);
+  border-radius:16px;
+  padding:15px 16px;
+  box-shadow:0 20px 60px rgba(0,0,0,.28);
+  backdrop-filter:blur(10px);
+}
+.float-card strong{display:block;font-size:13px}
+.float-card span{display:block;color:var(--muted);font-size:11px;margin-top:5px}
+.f1{left:0;top:72px}.f2{right:0;top:125px}.f3{left:40px;bottom:65px}.f4{right:30px;bottom:45px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--green);box-shadow:0 0 12px rgba(66,227,150,.65);margin-right:7px}
+
+.stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:0 0 70px
+}
+.stat{
+  border:1px solid var(--line);border-radius:16px;padding:21px;
+  background:linear-gradient(180deg,rgba(14,27,40,.88),rgba(9,19,29,.92))
+}
+.stat .n{font-size:31px;font-weight:900}
+.stat .l{color:var(--muted);font-size:12px;margin-top:5px}
+
+.section{padding:86px 0}
+.section-head{max-width:760px;margin-bottom:34px}
+.section-head h2{font-size:42px;letter-spacing:-1.2px;margin:8px 0 13px}
+.section-head p{color:var(--muted);line-height:1.7;margin:0}
+
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:linear-gradient(180deg,#0e1b28,#0a1520);
+  padding:24px;
+  box-shadow:0 22px 70px rgba(0,0,0,.22)
+}
+.iconbox{
+  width:48px;height:48px;border-radius:13px;display:grid;place-items:center;
+  background:#102132;border:1px solid #263f56;color:#7abaff;font-size:20px
+}
+.card h3{margin:18px 0 9px;font-size:20px}
+.card p{color:var(--muted);line-height:1.65;font-size:13px;margin:0}
+
+.creator{
+  display:grid;grid-template-columns:260px 1fr;gap:34px;align-items:center;
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:30px;
+  background:
+    linear-gradient(135deg,rgba(77,163,255,.10),transparent 42%),
+    linear-gradient(180deg,#0f1c29,#0a1520);
+}
+.creator-mark{
+  aspect-ratio:1;border-radius:22px;
+  display:grid;place-items:center;
+  background:radial-gradient(circle at 30% 20%,rgba(77,163,255,.32),rgba(14,31,46,.95) 55%,#08131d);
+  border:1px solid rgba(77,163,255,.32);
+  font-size:64px;font-weight:950;color:#87c1ff
+}
+.creator h3{font-size:34px;margin:7px 0 7px}
+.creator .handle{color:#71e3d1;font-weight:850;margin-bottom:14px}
+.creator p{color:#a8bacb;line-height:1.7;margin:0}
+
+.auth-section{
+  padding:92px 0 105px;
+}
+.auth-wrap{
+  display:grid;grid-template-columns:.9fr 1.1fr;gap:24px;align-items:start
+}
+.auth-copy{
+  padding:22px 10px 0 0
+}
+.auth-copy h2{font-size:44px;margin:10px 0 15px;letter-spacing:-1.2px}
+.auth-copy p{color:var(--muted);line-height:1.75;max-width:520px}
+.auth-benefits{display:grid;gap:12px;margin-top:24px}
+.benefit{display:flex;align-items:flex-start;gap:12px}
+.bicon{
+  width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  flex:none;border:1px solid #254055;background:#0d1d2a;color:#6fe0c4
+}
+.benefit strong{font-size:13px}
+.benefit span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+
+.auth-card{
+  border:1px solid var(--line);border-radius:22px;
+  background:linear-gradient(180deg,#0f1d2a,#09141e);
+  padding:26px;box-shadow:0 28px 80px rgba(0,0,0,.28)
+}
+.tabs{display:flex;gap:8px;margin-bottom:22px}
+.tab{
+  flex:1;border:1px solid var(--line);background:#0a1621;color:#9eb2c4;
+  border-radius:11px;padding:11px;font-weight:800
+}
+.tab.active{color:#fff;border-color:#38648a;background:#102337}
+.form{display:none}.form.active{display:block}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:12px;font-weight:800;color:#b8c7d6;margin-bottom:8px}
+.input{
+  width:100%;height:49px;border:1px solid #293d4f;background:#07121b;
+  color:var(--text);border-radius:12px;padding:0 13px;outline:none
+}
+.input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(77,163,255,.09)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.helper{font-size:11px;color:#758ba0;line-height:1.5;margin-top:10px}
+.msg{display:none;margin-top:12px;padding:11px 12px;border-radius:10px;font-size:12px}
+.msg.show{display:block}
+.msg.ok{border:1px solid rgba(66,227,150,.35);background:rgba(66,227,150,.07);color:#7af0b3}
+.msg.bad{border:1px solid rgba(255,116,133,.35);background:rgba(255,116,133,.07);color:#ff909d}
+
+.footer{
+  border-top:1px solid var(--line);
+  padding:28px 0;color:#778b9f;font-size:12px
+}
+.footer-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+@media(max-width:1050px){
+  .hero,.auth-wrap{grid-template-columns:1fr}
+  .showcase{min-height:430px}
+  .hero h1{font-size:52px}
+  .creator{grid-template-columns:190px 1fr}
+}
+@media(max-width:760px){
+  .nav-links{display:none}
+  .container{padding:0 18px}
+  .hero{padding-top:50px}
+  .hero h1{font-size:39px;letter-spacing:-1.4px}
+  .stats,.grid3{grid-template-columns:1fr 1fr}
+  .creator{grid-template-columns:1fr}.creator-mark{max-width:190px}
+  .auth-copy h2,.section-head h2{font-size:34px}
+  .form-row{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .stats,.grid3{grid-template-columns:1fr}
+  .nav-actions .ghost{display:none}
+  .showcase{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container nav">
+    <a class="brand" href="#inicio">
+      <div class="logo">&gt;_</div>
+      <div>
+        <strong>RootPath</strong>
+        <small>Cyber Range</small>
+      </div>
+    </a>
+
+    <nav class="nav-links">
+      <a href="#proyecto">Proyecto</a>
+      <a href="#experiencia">Experiencia</a>
+      <a href="#creador">Creador</a>
+      <a href="#acceso">Acceso</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a class="btn ghost" href="#acceso" onclick="selectTab('login')">Iniciar sesión</a>
+      <a class="btn primary" href="#acceso" onclick="selectTab('register')">Crear cuenta</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="inicio">
+    <div class="container hero">
+      <div>
+        <div class="kicker">RootPath · Entrenamiento práctico</div>
+        <h1>Aprende ciberseguridad <span>resolviendo situaciones reales.</span></h1>
+        <p>
+          RootPath es una experiencia de entrenamiento diseñada para practicar, investigar y
+          desarrollar habilidades de ciberseguridad mediante retos, laboratorios, rutas de aprendizaje
+          y escenarios interactivos con identidad dominicana.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn primary" href="#acceso" onclick="selectTab('register')">Comenzar ahora</a>
+          <a class="btn" href="#proyecto">Conocer RootPath</a>
+        </div>
+      </div>
+
+      <div class="showcase">
+        <div class="orbit"></div>
+        <div class="core">
+          <div>
+            <strong>RootPath</strong>
+            <span>Cyber Range RD</span>
+          </div>
+        </div>
+
+        <div class="float-card f1">
+          <strong><span class="dot"></span>Casos RD</strong>
+          <span>Escenarios con identidad local</span>
+        </div>
+
+        <div class="float-card f2">
+          <strong>◆ Laboratorios</strong>
+          <span>Práctica interactiva y controlada</span>
+        </div>
+
+        <div class="float-card f3">
+          <strong>⌘ Rutas</strong>
+          <span>Progreso por habilidades</span>
+        </div>
+
+        <div class="float-card f4">
+          <strong>▦ Investigación</strong>
+          <span>Analiza evidencia y resuelve casos</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="container stats">
+      <div class="stat"><div class="n">23+</div><div class="l">Retos disponibles</div></div>
+      <div class="stat"><div class="n">5</div><div class="l">Rutas de formación</div></div>
+      <div class="stat"><div class="n">15</div><div class="l">Dominios de práctica</div></div>
+      <div class="stat"><div class="n">RD</div><div class="l">Identidad local</div></div>
+    </div>
+  </section>
+
+  <section id="proyecto" class="section">
+    <div class="container">
+      <div class="section-head">
+        <div class="kicker">Presentación del proyecto</div>
+        <h2>¿Qué es RootPath?</h2>
+        <p>
+          RootPath es una plataforma de entrenamiento en ciberseguridad concebida para convertir el aprendizaje
+          técnico en una experiencia práctica, progresiva y memorable. El usuario aprende resolviendo retos,
+          analizando evidencia y enfrentando escenarios diseñados para poner a prueba su razonamiento.
+        </p>
+      </div>
+
+      <div class="grid3">
+        <div class="card">
+          <div class="iconbox">◇</div>
+          <h3>Aprendizaje práctico</h3>
+          <p>El conocimiento se construye resolviendo problemas, tomando decisiones y enfrentando desafíos progresivos.</p>
+        </div>
+
+        <div class="card">
+          <div class="iconbox">◆</div>
+          <h3>Casos con identidad dominicana</h3>
+          <p>Escenarios inspirados en provincias, vida urbana, cultura local, investigaciones digitales y situaciones reconocibles del país.</p>
+        </div>
+
+        <div class="card">
+          <div class="iconbox">⌘</div>
+          <h3>Progreso medible</h3>
+          <p>El usuario puede avanzar por rutas, categorías y niveles de dificultad mientras desarrolla habilidades concretas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="experiencia" class="section">
+    <div class="container">
+      <div class="section-head">
+        <div class="kicker">Experiencia RootPath</div>
+        <h2>Más que resolver una bandera.</h2>
+        <p>
+          Los retos se presentan como expedientes, investigaciones, sistemas interactivos, simulaciones, juegos,
+          análisis de evidencia y situaciones diseñadas para sentirse como una experiencia completa.
+        </p>
+      </div>
+
+      <div class="grid3">
+        <div class="card">
+          <div class="iconbox">▣</div>
+          <h3>Web</h3>
+          <p>Aplicaciones visualmente completas, acceso, formularios, paneles, perfiles, mensajes y escenarios creíbles.</p>
+        </div>
+        <div class="card">
+          <div class="iconbox">⌁</div>
+          <h3>Forense y Blue Team</h3>
+          <p>Logs, timelines, artefactos, eventos y evidencia digital para reconstruir lo ocurrido.</p>
+        </div>
+        <div class="card">
+          <div class="iconbox">◈</div>
+          <h3>Linux, AD, Crypto y más</h3>
+          <p>Retos técnicos que combinan análisis, razonamiento, investigación y práctica controlada.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="creador" class="section">
+    <div class="container">
+      <div class="creator">
+        <div class="creator-mark">0x</div>
+        <div>
+          <div class="kicker">Creador del proyecto</div>
+          <h3>Elvis A. Correa Rivera</h3>
+          <div class="handle">0xMickey</div>
+          <p>
+            RootPath nace como una propuesta de entrenamiento práctico enfocada en crear una experiencia
+            de aprendizaje de ciberseguridad con personalidad propia, contexto dominicano y una visión centrada
+            en retos que sean técnicamente útiles, visualmente atractivos y fáciles de recordar.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="acceso" class="auth-section">
+    <div class="container auth-wrap">
+      <div class="auth-copy">
+        <div class="kicker">Acceso RootPath</div>
+        <h2>Entra al laboratorio o crea tu cuenta.</h2>
+        <p>
+          Tu cuenta mantiene tu progreso, retos completados, rutas, writeups y actividad dentro de RootPath.
+        </p>
+
+        <div class="auth-benefits">
+          <div class="benefit">
+            <div class="bicon">✓</div>
+            <div><strong>Progreso personal</strong><span>Continúa exactamente donde lo dejaste.</span></div>
+          </div>
+          <div class="benefit">
+            <div class="bicon">◆</div>
+            <div><strong>Retos y rutas</strong><span>Acceso a diferentes áreas y niveles.</span></div>
+          </div>
+          <div class="benefit">
+            <div class="bicon">✎</div>
+            <div><strong>Writeups</strong><span>Construye tu propia base de conocimiento.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-card">
+        <div class="tabs">
+          <button class="tab active" id="loginTab" type="button" onclick="selectTab('login')">Iniciar sesión</button>
+          <button class="tab" id="registerTab" type="button" onclick="selectTab('register')">Crear cuenta</button>
+        </div>
+
+        <form class="form active" id="loginForm" method="POST" action="/login">
+          <input type="hidden" name="nonce" value="{{ session.get('nonce','') }}">
+          <div class="field">
+            <label>Usuario o correo</label>
+            <input class="input" id="loginUser" name="name" placeholder="usuario o correo" autocomplete="username" required>
+          </div>
+
+          <div class="field">
+            <label>Contraseña</label>
+            <input class="input" id="loginPass" name="password" type="password" placeholder="••••••••••" autocomplete="current-password" required>
+          </div>
+
+          <button class="btn primary" style="width:100%" type="submit">Entrar a RootPath</button>
+          <div id="loginMsg" class="msg{% if errors %} show bad{% endif %}">{% for e in errors %}{{ e }}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
+        </form>
+
+        <form class="form" id="registerForm" method="POST" action="/register">
+          <input type="hidden" name="nonce" value="{{ session.get('nonce','') }}">
+          <div class="form-row">
+            <div class="field">
+              <label>Nombre</label>
+              <input class="input" id="regName" name="fields[{{ fullname_field_id or '' }}]" placeholder="Tu nombre">
+            </div>
+            <div class="field">
+              <label>Alias (usuario)</label>
+              <input class="input" id="regAlias" name="name" placeholder="0xTuAlias" autocomplete="username" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Correo</label>
+            <input class="input" id="regEmail" name="email" type="email" placeholder="correo@ejemplo.com" autocomplete="email" required>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Contraseña</label>
+              <input class="input" id="regPass" name="password" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" required>
+            </div>
+            <div class="field">
+              <label>Confirmar contraseña</label>
+              <input class="input" id="regPass2" type="password" placeholder="Repite la contraseña" autocomplete="new-password" required>
+            </div>
+          </div>
+
+          <button class="btn primary" style="width:100%" type="submit">Crear mi cuenta</button>
+          <div id="registerMsg" class="msg{% if errors %} show bad{% endif %}">{% for e in errors %}{{ e }}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
+          <div class="helper">Al crear una cuenta aceptas las reglas del entorno de práctica y su uso exclusivamente autorizado.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-row">
+    <span>© 2026 RootPath</span>
+    <span>Creado por Elvis A. Correa Rivera · 0xMickey</span>
+  </div>
+</footer>
+
+<script>
+var DEFAULT_TAB = "{{ default_tab|default('login') }}";
+
+function selectTab(type){
+  var loginTab=document.getElementById('loginTab');
+  var registerTab=document.getElementById('registerTab');
+  var loginForm=document.getElementById('loginForm');
+  var registerForm=document.getElementById('registerForm');
+  if(!loginTab) return;
+  if(type==='register'){
+    loginTab.classList.remove('active');
+    registerTab.classList.add('active');
+    loginForm.classList.remove('active');
+    registerForm.classList.add('active');
+  }else{
+    registerTab.classList.remove('active');
+    loginTab.classList.add('active');
+    registerForm.classList.remove('active');
+    loginForm.classList.add('active');
+  }
+}
+
+function show(el,text,type){
+  el.innerHTML=text;
+  el.className='msg show '+type;
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  if(DEFAULT_TAB==='register') selectTab('register');
+  var lf=document.getElementById('loginForm');
+  if(lf){ lf.addEventListener('submit', function(e){
+    var u=document.getElementById('loginUser').value.trim();
+    var p=document.getElementById('loginPass').value;
+    if(!u || !p){ e.preventDefault(); show(document.getElementById('loginMsg'),'Completa usuario y contraseña.','bad'); }
+  }); }
+  var rf=document.getElementById('registerForm');
+  if(rf){ rf.addEventListener('submit', function(e){
+    var p1=document.getElementById('regPass').value;
+    var p2=document.getElementById('regPass2').value;
+    var msg=document.getElementById('registerMsg');
+    if(p1.length<8){ e.preventDefault(); show(msg,'La contraseña debe tener al menos 8 caracteres.','bad'); return; }
+    if(p1!==p2){ e.preventDefault(); show(msg,'Las contraseñas no coinciden.','bad'); }
+  }); }
+});
+</script>
+
+</body>
+</html>

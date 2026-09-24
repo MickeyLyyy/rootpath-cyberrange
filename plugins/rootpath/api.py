@@ -1,10 +1,13 @@
 import os
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, abort, session, render_template, redirect
-from CTFd.models import db, Challenges, Solves, Hints, HintUnlocks, Users
-from CTFd.utils.decorators import authed_only
-from CTFd.utils.user import get_current_user
-from .models import RootPathCert, RootPathDomain, RootPathMap, RootPathExam
+from CTFd.models import (db, Challenges, Solves, Hints, HintUnlocks, Users, ChallengeFiles,
+                         Pages, UserFields, Submissions, Tracking)
+from CTFd.utils.decorators import authed_only, admins_only
+from CTFd.utils.user import get_current_user, is_admin
+from .models import (RootPathCert, RootPathDomain, RootPathMap, RootPathExam,
+                     RootPathLabAction, RootPathLabLease, RootPathLabInstance)
+from .flags import user_flag
 
 bp = Blueprint(
     "rootpath", __name__,
@@ -281,6 +284,98 @@ def dashboard():
     return render_template("dashboard.html", nonce=session.get("nonce", ""))
 
 
+@bp.route("/api/me")
+@authed_only
+def me_api():
+    """Identidad + rol del usuario (CTFd no expone 'type' en /api/v1/users/me)."""
+    u = get_current_user()
+    return jsonify({"success": True, "admin": bool(is_admin()),
+                    "id": u.id, "name": u.name, "email": u.email})
+
+
+@bp.route("/admin")
+@admins_only
+def admin_panel():
+    """Panel administrativo RootPath (solo admins)."""
+    return render_template("admin.html")
+
+
+@bp.route("/api/admin/overview")
+@admins_only
+def admin_overview():
+    """Datos agregados para el panel administrativo."""
+    users = Users.query.order_by(Users.id).all()
+    chs = Challenges.query.order_by(Challenges.id).all()
+    solves = Solves.query.all()
+    subs = Submissions.query.order_by(Submissions.id.desc()).limit(200).all()
+
+    val = {c.id: c.value for c in chs}
+    cat_of = {c.id: c.category for c in chs}
+    per_ch = {}
+    uscore = {}
+    solved_by = {}
+    for s in solves:
+        per_ch[s.challenge_id] = per_ch.get(s.challenge_id, 0) + 1
+        uscore[s.user_id] = uscore.get(s.user_id, 0) + val.get(s.challenge_id, 0)
+        solved_by.setdefault(s.user_id, set()).add(s.challenge_id)
+
+    ipmap = {}
+    all_ips = set()
+    for t in Tracking.query.all():
+        if t.ip:
+            all_ips.add(t.ip)
+        if t.user_id:
+            ipmap.setdefault(t.user_id, set()).add(t.ip)
+
+    cat_names = sorted({c.category for c in chs if c.category})
+    cats = {}
+    for c in chs:
+        e = cats.setdefault(c.category, {"category": c.category, "challenges": 0, "solves": 0})
+        e["challenges"] += 1
+        e["solves"] += per_ch.get(c.id, 0)
+    bycat = sorted(cats.values(), key=lambda x: -x["solves"])
+    cat_max = max([e["solves"] for e in bycat] or [1]) or 1
+
+    users_out = [{"id": u.id, "name": u.name, "email": u.email,
+                  "type": (u.type or "user"), "points": uscore.get(u.id, 0),
+                  "ips": len(ipmap.get(u.id, ())), "verified": bool(u.verified),
+                  "banned": bool(u.banned), "hidden": bool(u.hidden)} for u in users]
+
+    scoreboard = sorted([{"id": u.id, "user": u.name, "points": uscore.get(u.id, 0),
+                          "solved": len(solved_by.get(u.id, ()))} for u in users],
+                        key=lambda x: -x["points"])
+
+    chs_out = [{"id": c.id, "name": c.name, "category": c.category, "value": c.value,
+                "state": c.state, "solves": per_ch.get(c.id, 0)} for c in chs]
+
+    uname = {u.id: u.name for u in users}
+    cname = {c.id: c.name for c in chs}
+    subs_out = [{"id": s.id, "user": uname.get(s.user_id, "?"),
+                 "challenge": cname.get(s.challenge_id, "?"), "type": s.type,
+                 "ip": s.ip, "provided": (s.provided or "")[:60],
+                 "date": (s.date.isoformat() + "Z") if s.date else None} for s in subs]
+
+    matrix_rows = []
+    for u in users:
+        solved_cids = solved_by.get(u.id, set())
+        matrix_rows.append({"user": u.name,
+                            "cells": [sum(1 for cid in solved_cids if cat_of.get(cid) == cat)
+                                      for cat in cat_names]})
+
+    total_points = sum(uscore.values())
+    return jsonify({"success": True, "data": {
+        "stats": {"users": len(users), "ips": len(all_ips), "points": total_points,
+                  "challenges": len(chs), "solves": len(solves),
+                  "submissions": Submissions.query.count(),
+                  "correct": Submissions.query.filter_by(type="correct").count(),
+                  "incorrect": Submissions.query.filter_by(type="incorrect").count()},
+        "categories": bycat, "cat_max": cat_max,
+        "users": users_out, "challenges": chs_out,
+        "scoreboard": scoreboard, "submissions": subs_out,
+        "matrix": {"categories": cat_names, "rows": matrix_rows},
+    }})
+
+
 @bp.route("/api/catalog")
 @authed_only
 def catalog_api():
@@ -291,13 +386,24 @@ def catalog_api():
     for c in Challenges.query.order_by(Challenges.id).all():
         hs = Hints.query.filter_by(challenge_id=c.id).order_by(Hints.cost).all()
         hints = [{"id": h.id, "cost": h.cost, "content": (h.content if h.id in unlocked else None)} for h in hs]
+        files = [{"name": os.path.basename(f.location), "url": "/files/" + f.location}
+                 for f in ChallengeFiles.query.filter_by(challenge_id=c.id).all()]
         out.append({"id": c.id, "name": c.name, "category": c.category, "value": c.value,
-                    "description": c.description, "solved": c.id in solved, "hints": hints})
+                    "description": c.description, "solved": c.id in solved, "hints": hints,
+                    "files": files})
     return jsonify({"success": True, "data": out})
 
 
-# ---------- laboratorios (control real) ----------
+# ---------- laboratorios: instancias efimeras por usuario ----------
 LAB_URL = "http://172.170.10.11:9001"
+LAB_HOST = "172.170.10.11"
+LAB_ACTIONS = ("start", "stop", "restart")
+LAB_RATE_LIMIT = 30     # acciones por usuario
+LAB_RATE_WINDOW = 60    # ventana en segundos
+LAB_DEFAULT_TTL_MINUTES = 60
+LAB_PORT_MIN = 30000
+LAB_PORT_MAX = 40000
+LAB_MAX_PER_USER = 3    # instancias simultaneas por usuario
 
 
 def _lab_request(path, method="GET", payload=None):
@@ -315,22 +421,307 @@ def _lab_request(path, method="GET", payload=None):
         return r.status_code, {"error": r.text[:200]}
 
 
+def _client_ip():
+    """IP de origen del cliente. Prefiere X-Forwarded-For (detras de proxy)."""
+    xff = request.headers.get("X-Forwarded-For", "")
+    if xff:
+        return xff.split(",")[0].strip()[:64]
+    xri = request.headers.get("X-Real-IP", "").strip()
+    if xri:
+        return xri[:64]
+    return (request.remote_addr or "?")[:64]
+
+
+def _log_lab_action(user, action, name, result, service=None, detail=None):
+    row = RootPathLabAction(
+        user_id=int(user.id),
+        user_name=(user.name or "")[:128],
+        ip=_client_ip(),
+        forwarded_for=(request.headers.get("X-Forwarded-For", "") or "")[:255] or None,
+        user_agent=(request.headers.get("User-Agent", "") or "")[:255] or None,
+        action=str(action or "")[:16],
+        challenge_name=(name or "")[:200] or None,
+        service=(service or "")[:128] or None,
+        result=str(result or "")[:32],
+        detail=detail,
+    )
+    db.session.add(row)
+    db.session.commit()
+    return row
+
+
+def _lab_recent_count(user_id):
+    since = datetime.utcnow() - timedelta(seconds=LAB_RATE_WINDOW)
+    return RootPathLabAction.query.filter(
+        RootPathLabAction.user_id == user_id,
+        RootPathLabAction.created_at >= since,
+        ~RootPathLabAction.result.like("ok:auto%"),
+    ).count()
+
+
+def _lab_ttl_minutes():
+    raw = (_runtime("lab_ttl_minutes", str(LAB_DEFAULT_TTL_MINUTES)) or str(LAB_DEFAULT_TTL_MINUTES)).strip()
+    try:
+        n = int(raw)
+        return n if n > 0 else LAB_DEFAULT_TTL_MINUTES
+    except ValueError:
+        return LAB_DEFAULT_TTL_MINUTES
+
+
+def _lab_map():
+    """Allowlist de retos con servicio (compartida con el lab_service)."""
+    import json as _json
+    try:
+        with open("/opt/CTFd/runtime/lab_map.json", encoding="utf-8") as fh:
+            return _json.load(fh)
+    except Exception:
+        return {}
+
+
+def _lab_meta(name):
+    return _lab_map().get(name)
+
+
+def _alloc_port(used):
+    for p in range(LAB_PORT_MIN, LAB_PORT_MAX + 1):
+        if p not in used:
+            return p
+    return None
+
+
+def _instance_conn(inst):
+    """Cadena de conexion que se muestra al usuario para su instancia."""
+    if not inst:
+        return None
+    if inst.kind == "linux":
+        meta = _lab_meta(inst.challenge_name) or {}
+        return "ssh %s@%s -p %d   (password: %s)" % (
+            meta.get("ssh_user", "player"), LAB_HOST, inst.host_port,
+            meta.get("ssh_pass", "player"))
+    return "http://%s:%d/" % (LAB_HOST, inst.host_port)
+
+
+def _log_lab_action_sys(name, user_id, user_name, service, action, result, detail=None, ip="reaper"):
+    row = RootPathLabAction(
+        user_id=user_id or 0,
+        user_name=(user_name or "auto")[:128],
+        ip=ip,
+        user_agent="rootpath-reaper",
+        action=action,
+        challenge_name=(name or "")[:200] or None,
+        service=(service or "")[:128] or None,
+        result=str(result or "")[:32],
+        detail=detail,
+    )
+    db.session.add(row)
+    db.session.commit()
+    return row
+
+
+@bp.after_app_request
+def _close_on_solve(response):
+    """Al acertar la flag, destruye la instancia de ESE usuario para el reto."""
+    try:
+        if request.method != "POST" or request.path != "/api/v1/challenges/attempt":
+            return response
+        try:
+            payload = response.get_json(silent=True)
+        except Exception:
+            payload = None
+        if not payload or not payload.get("success"):
+            return response
+        status = (payload.get("data") or {}).get("status")
+        if status not in ("correct", "already_solved"):
+            return response
+        body = request.get_json(silent=True) or {}
+        cid = body.get("challenge_id")
+        ch = db.session.get(Challenges, int(cid)) if cid is not None else None
+        user = get_current_user()
+        if not ch or not user:
+            return response
+        inst = RootPathLabInstance.query.filter_by(user_id=user.id, challenge_id=ch.id).first()
+        if not inst:
+            return response
+        code, data = _lab_request("/lab/destroy", "POST",
+                                  {"name": ch.name, "uid": user.id, "container": inst.container_name})
+        _log_lab_action(user, "stop", ch.name,
+                        "ok:auto_solve" if code == 200 else "error:%s" % code,
+                        service=inst.service)
+        db.session.delete(inst)
+        db.session.commit()
+    except Exception:
+        pass
+    return response
+
+
 @bp.route("/api/lab/status")
 @authed_only
 def lab_status():
-    code, data = _lab_request("/lab/status", "GET", {"name": request.args.get("name", "")})
-    return jsonify(data), code
+    """Estado de la instancia del usuario actual para un reto."""
+    user = get_current_user()
+    name = request.args.get("name", "")
+    meta = _lab_meta(name)
+    out = {"success": True, "name": name, "configured": bool(meta),
+           "ttl_minutes": _lab_ttl_minutes(), "running": False, "deployed": False, "remaining": 0}
+    if meta:
+        out["kind"] = meta.get("kind")
+    ch = Challenges.query.filter_by(name=name).first()
+    inst = None
+    if ch:
+        inst = RootPathLabInstance.query.filter_by(user_id=user.id, challenge_id=ch.id).first()
+    if inst:
+        out["deployed"] = True
+        out["host_port"] = inst.host_port
+        out["service"] = inst.service
+        out["container"] = inst.container_name
+        out["connection"] = _instance_conn(inst)
+        code, data = _lab_request("/lab/status", "GET", {"name": name, "uid": user.id})
+        if code == 200 and isinstance(data, dict):
+            out["running"] = bool(data.get("running"))
+        now = datetime.utcnow()
+        if out["running"] and inst.expires_at:
+            out["expires_at"] = inst.expires_at.isoformat() + "Z"
+            out["remaining"] = max(0, int((inst.expires_at - now).total_seconds()))
+        elif not out["running"]:
+            # instancia registrada pero no viva -> limpiar
+            db.session.delete(inst)
+            db.session.commit()
+            out["deployed"] = False
+            out["connection"] = None
+    return jsonify(out)
 
 
 @bp.route("/api/lab/control", methods=["POST"])
 @authed_only
 def lab_control():
+    """Deploy/destroy de la instancia del usuario (por reto)."""
+    user = get_current_user()
     d = request.get_json() or {}
     action = d.get("action")
-    if action not in ("start", "stop", "restart"):
+    name = (d.get("name") or "").strip()
+    if action not in LAB_ACTIONS:
+        _log_lab_action(user, action, name, "denied:bad_action")
         return jsonify({"success": False, "error": "accion invalida"}), 400
-    code, data = _lab_request("/lab/" + action, "POST", {"name": d.get("name")})
-    return jsonify(data), code
+    if not name:
+        _log_lab_action(user, action, "", "denied:no_name")
+        return jsonify({"success": False, "error": "reto no indicado"}), 400
+    meta = _lab_meta(name)
+    if not meta:
+        _log_lab_action(user, action, name, "denied:no_service")
+        return jsonify({"success": False, "error": "Este reto no tiene servicio desplegable"}), 400
+    if not is_admin() and _lab_recent_count(user.id) >= LAB_RATE_LIMIT:
+        _log_lab_action(user, action, name, "denied:rate_limit")
+        return jsonify({"success": False, "error": "demasiadas acciones, espera un momento"}), 429
+
+    ch = Challenges.query.filter_by(name=name).first()
+    cid = ch.id if ch else None
+    inst = RootPathLabInstance.query.filter_by(user_id=user.id, challenge_id=cid).first() if cid else None
+
+    if action == "stop":
+        code, data = _lab_request("/lab/destroy", "POST",
+                                  {"name": name, "uid": user.id,
+                                   "container": (inst.container_name if inst else None)})
+        if inst:
+            db.session.delete(inst)
+            db.session.commit()
+        _log_lab_action(user, "stop", name, "ok" if code == 200 else "error:%s" % code,
+                        service=meta.get("service"))
+        return jsonify({"success": code == 200, "action": "stop"}), (200 if code == 200 else code)
+
+    # start / restart: borra la instancia previa y despliega una nueva
+    if inst:
+        _lab_request("/lab/destroy", "POST",
+                     {"name": name, "uid": user.id, "container": inst.container_name})
+        db.session.delete(inst)
+        db.session.commit()
+
+    active = RootPathLabInstance.query.filter_by(user_id=user.id).count()
+    if active >= LAB_MAX_PER_USER and not is_admin():
+        _log_lab_action(user, action, name, "denied:max_instances")
+        return jsonify({"success": False,
+                        "error": "Limite de %d instancias activas. Cierra alguna primero." % LAB_MAX_PER_USER}), 429
+
+    used = {r.host_port for r in RootPathLabInstance.query.all() if r.host_port}
+    port = _alloc_port(used)
+    if not port:
+        _log_lab_action(user, action, name, "error:no_port")
+        return jsonify({"success": False, "error": "sin puertos libres"}), 503
+
+    code, data = _lab_request("/lab/deploy", "POST",
+                              {"name": name, "uid": user.id, "host_port": port,
+                               "flag": user_flag(user.id, cid, meta.get("service"))})
+    ok = bool(isinstance(data, dict) and data.get("ok"))
+    if not ok:
+        _log_lab_action(user, action, name, "error:%s" % code,
+                        detail=((data.get("out") or data.get("error") or "")[:1000]
+                                if isinstance(data, dict) else None) or None)
+        return jsonify({"success": False, "error": "no se pudo desplegar el laboratorio",
+                        "detail": data}), 500
+
+    now = datetime.utcnow()
+    inst = RootPathLabInstance(
+        user_id=user.id, user_name=(user.name or "")[:128],
+        challenge_id=cid, challenge_name=name, service=meta.get("service"),
+        image=meta.get("image"), container_name=data.get("container"),
+        host_port=port, internal_port=meta.get("internal_port"), kind=meta.get("kind"),
+        created_at=now, expires_at=now + timedelta(minutes=_lab_ttl_minutes()), status="running")
+    db.session.add(inst)
+    db.session.commit()
+    _log_lab_action(user, action, name, "ok", service=meta.get("service"))
+    return jsonify({"success": True, "action": action, "host_port": port,
+                    "container": inst.container_name, "connection": _instance_conn(inst),
+                    "remaining": _lab_ttl_minutes() * 60})
+
+
+@bp.route("/api/agent/reap", methods=["GET", "POST"])
+def agent_reap():
+    """Destruye las instancias cuyo TTL expiro. Lo invoca el reaper local."""
+    key = request.headers.get("X-Agent-Key", "")
+    if not _runtime("agent_key") or key != _runtime("agent_key"):
+        abort(403, description="agent key invalida")
+    now = datetime.utcnow()
+    expired = RootPathLabInstance.query.filter(
+        RootPathLabInstance.expires_at.isnot(None),
+        RootPathLabInstance.expires_at <= now,
+    ).all()
+    reaped = []
+    for inst in expired:
+        code, data = _lab_request("/lab/destroy", "POST",
+                                  {"name": inst.challenge_name, "uid": inst.user_id,
+                                   "container": inst.container_name})
+        ok = code == 200
+        _log_lab_action_sys(inst.challenge_name, inst.user_id, inst.user_name, inst.service,
+                            "stop", "ok:auto_ttl" if ok else "error:%s" % code,
+                            detail=((data.get("out") or data.get("error") or "")[:1000]
+                                    if isinstance(data, dict) else None) or None)
+        db.session.delete(inst)
+        db.session.commit()
+        reaped.append(inst.challenge_name)
+    return jsonify({"success": True, "reaped": reaped, "checked": now.isoformat() + "Z"})
+
+
+@bp.route("/api/lab/audit")
+@admins_only
+def lab_audit():
+    """Historial de despliegues/tumbas. SOLO administradores."""
+    q = RootPathLabAction.query
+    uid = request.args.get("user_id", type=int)
+    if uid:
+        q = q.filter(RootPathLabAction.user_id == uid)
+    act = request.args.get("action")
+    if act:
+        q = q.filter(RootPathLabAction.action == act)
+    ch = request.args.get("challenge")
+    if ch:
+        q = q.filter(RootPathLabAction.challenge_name.like("%" + ch + "%"))
+    res = request.args.get("result")
+    if res:
+        q = q.filter(RootPathLabAction.result.like(res + "%"))
+    limit = min(max(request.args.get("limit", type=int) or 100, 1), 500)
+    total = q.count()
+    rows = q.order_by(RootPathLabAction.id.desc()).limit(limit).all()
+    return jsonify({"success": True, "total": total, "count": len(rows),
+                    "data": [r.as_dict() for r in rows]})
 
 
 HIDE_PREFIXES = ("/challenges", "/scoreboard", "/users", "/teams", "/team/",
@@ -343,7 +734,18 @@ SAFE_PREFIXES = ("/api/", "/plugins/", "/themes/", "/static/", "/files/", "/admi
 
 def _redir():
     u = get_current_user()
-    return redirect("/plugins/rootpath/dashboard" if u else "/login")
+    return redirect("/plugins/rootpath/dashboard" if u else "/plugins/rootpath/welcome")
+
+
+@bp.route("/welcome")
+def welcome():
+    """Landing publica: presentacion + login + registro."""
+    if get_current_user():
+        return redirect("/plugins/rootpath/dashboard")
+    f = UserFields.query.filter_by(name="Nombre completo").first()
+    return render_template("welcome.html",
+                           default_tab=request.args.get("tab", "login"),
+                           fullname_field_id=(f.id if f else None))
 
 
 @bp.before_app_request
@@ -353,9 +755,20 @@ def _hide_ctfd():
     p = request.path
     if p == "/":
         return _redir()
+    if p == "/login":
+        return redirect("/plugins/rootpath/welcome")
+    if p == "/register":
+        return redirect("/plugins/rootpath/welcome?tab=register")
+    if (p in ("/admin", "/admin/statistics", "/admin/scoreboard",
+              "/admin/challenges", "/admin/users") or p.startswith("/admin/submissions")):
+        return redirect("/plugins/rootpath/admin")
     for safe in SAFE_PREFIXES:
         if p.startswith(safe):
             return
     for pre in HIDE_PREFIXES:
         if p.startswith(pre):
             return _redir()
+    # Cualquier pagina CTFd (p. ej. el panel antiguo "cyber-range") -> dashboard actual.
+    route = p.strip("/")
+    if route and Pages.query.filter_by(route=route).first() is not None:
+        return _redir()

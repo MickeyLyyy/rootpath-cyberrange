@@ -1,11 +1,26 @@
+# Secretos / credenciales
 .env
 .admin_token
 .student_token
-ctfd/logs/
-**/__pycache__/
 agents/pve_token
 agents/audit.jsonl
-runtime/
+
+# Runtime (estado + secretos); solo se versiona el mapa de labs
+runtime/*
+!runtime/lab_map.json
+
+# Logs / caches / backups
+ctfd/logs/
+**/__pycache__/
+*.pyc
+.backup-*/
+
+# Builds generados
+challenges-v2/build/
+challenges-v2/*.tar.gz
+*.tar.gz
+
+# Fases antiguas con datos sensibles
 pipeline/staging/
 pipeline/published-compose.yml
 pipeline/published_services.json
