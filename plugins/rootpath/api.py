@@ -333,8 +333,29 @@ def lab_control():
     return jsonify(data), code
 
 
+HIDE_PREFIXES = ("/challenges", "/scoreboard", "/users", "/teams", "/team/",
+                 "/notifications", "/settings", "/awards", "/rules", "/register",
+                 "/pages/", "/page/", "/solutions", "/hints", "/dynamic_challenges",
+                 "/brackets", "/confirm", "/reset", "/edit", "/profile")
+SAFE_PREFIXES = ("/api/", "/plugins/", "/themes/", "/static/", "/files/", "/admin",
+                 "/login", "/logout", "/setup", "/favicon")
+
+
+def _redir():
+    u = get_current_user()
+    return redirect("/plugins/rootpath/dashboard" if u else "/login")
+
+
 @bp.before_app_request
-def _landing_redirect():
-    if request.method == "GET" and request.path == "/":
-        u = get_current_user()
-        return redirect("/plugins/rootpath/dashboard" if u else "/login")
+def _hide_ctfd():
+    if request.method != "GET":
+        return
+    p = request.path
+    if p == "/":
+        return _redir()
+    for safe in SAFE_PREFIXES:
+        if p.startswith(safe):
+            return
+    for pre in HIDE_PREFIXES:
+        if p.startswith(pre):
+            return _redir()

@@ -77,6 +77,9 @@
   .list{display:grid;gap:10px}
   .list-item{border:1px solid var(--line);background:#0b1621;border-radius:13px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:14px;cursor:pointer}
   .list-item:hover{border-color:#30455b}
+  .list-item.sel{border-color:var(--blue);box-shadow:inset 0 0 0 1px rgba(77,163,255,.35)}
+  .cat-head{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--cyan);font-weight:800;margin:16px 0 6px;display:flex;justify-content:space-between}
+  .cat-head:first-child{margin-top:0}
   .list-title{font-weight:750}.list-sub{font-size:12px;color:var(--muted);margin-top:4px}
   .badge{font-size:11px;padding:5px 8px;border-radius:8px;background:#142436;color:#9ec2e9;border:1px solid #223950}
   .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(54,226,138,.65);display:inline-block}
@@ -149,7 +152,7 @@
     <header class="topbar">
       <div class="top-title"><h1 id="topTitle">Desafíos</h1><p id="topSub">Entrena, despliega y controla laboratorios efímeros.</p></div>
       <div class="top-actions">
-        <a class="icon-btn" style="display:grid;place-items:center" href="/challenges" title="Catálogo CTFd">⌂</a>
+        <button class="icon-btn" title="Inicio / actualizar" onclick="refreshAll()">⌂</button>
         <button class="icon-btn" title="Recargar" onclick="refreshAll()">↻</button>
         <a class="icon-btn" style="display:grid;place-items:center" href="/logout" title="Cerrar sesión">⎋</a>
         <div class="profile"><div class="avatar" id="avatar">?</div><div><strong style="font-size:13px" id="uname">—</strong><div class="tiny muted" id="urole">Estudiante</div></div></div>
@@ -193,7 +196,7 @@
             </div>
 
             <div class="card card-pad">
-              <div class="card-head"><h3>Otros desafíos</h3><a class="btn" href="/challenges">Ver catálogo</a></div>
+              <div class="card-head"><h3>Catálogo por categoría</h3><span class="tiny muted" id="ch-total">—</span></div>
               <div class="list" id="ch-list"><div class="tiny muted">Cargando…</div></div>
             </div>
           </div>
@@ -279,7 +282,7 @@
       <section id="usuarios" class="page">
         <div class="page-head">
           <div><div class="kicker">Administración</div><h2>Usuarios</h2><p>Estado de cuentas y actividad.</p></div>
-          <a class="btn primary" href="/admin/users">Gestionar en CTFd</a>
+          <button class="btn primary" onclick="notify('La gestión de usuarios es solo para administradores')">Gestionar</button>
         </div>
         <div class="card card-pad">
           <div class="card-head"><h3>Top usuarios por puntuación</h3><span class="chip" id="usr-count">—</span></div>
@@ -344,11 +347,22 @@ async function loadCatalog(){
 }
 function renderChallengeList(){
   const el=document.getElementById('ch-list');
-  const others=CATALOG.filter(c=>c.id!==SELECTED).slice(0,12);
-  if(!others.length){el.innerHTML='<div class="tiny muted">No hay más retos.</div>';return;}
-  el.innerHTML=others.map(c=>`<div class="list-item" onclick="selectChallenge(${c.id})">
-    <div><div class="list-title">${esc(c.name)} ${c.solved?'<span style="color:var(--green)">✓</span>':''}</div>
-    <div class="list-sub">${esc(c.category)}</div></div><span class="badge">${c.value} pts</span></div>`).join('');
+  if(!CATALOG.length){el.innerHTML='<div class="tiny muted">No hay retos.</div>';return;}
+  const tot=document.getElementById('ch-total'); if(tot) tot.textContent=CATALOG.length+' retos · '+new Set(CATALOG.map(c=>c.category)).size+' categorías';
+  const cats={};
+  CATALOG.forEach(c=>{(cats[c.category]=cats[c.category]||[]).push(c);});
+  let h='';
+  Object.keys(cats).sort().forEach(cat=>{
+    const arr=cats[cat].slice().sort((a,b)=>a.value-b.value);
+    const done=arr.filter(x=>x.solved).length;
+    h+='<div class="cat-head"><span>'+esc(cat)+'</span><span class="muted">'+done+'/'+arr.length+'</span></div>';
+    arr.forEach(c=>{
+      h+='<div class="list-item'+(c.id===SELECTED?' sel':'')+'" onclick="selectChallenge('+c.id+')">'+
+         '<div><div class="list-title">'+esc(c.name)+(c.solved?' <span style="color:var(--green)">✓</span>':'')+'</div>'+
+         '<div class="list-sub">'+esc(c.category)+'</div></div><span class="badge">'+c.value+' pts</span></div>';
+    });
+  });
+  el.innerHTML=h;
 }
 function selectChallenge(id){SELECTED=id;renderChallengeList();renderChallenge();window.scrollTo({top:0,behavior:'smooth'});}
 function renderChallenge(){
