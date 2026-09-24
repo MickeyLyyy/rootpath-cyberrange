@@ -337,5 +337,4 @@ def lab_control():
 def _landing_redirect():
     if request.method == "GET" and request.path == "/":
         u = get_current_user()
-        if u:
-            return redirect("/plugins/rootpath/dashboard")
+        return redirect("/plugins/rootpath/dashboard" if u else "/login")
