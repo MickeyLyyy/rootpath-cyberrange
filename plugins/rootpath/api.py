@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from flask import Blueprint, jsonify, request, abort
+from flask import Blueprint, jsonify, request, abort, session, render_template
 from CTFd.models import db, Challenges, Solves, Hints, HintUnlocks, Users
 from CTFd.utils.decorators import authed_only
 from CTFd.utils.user import get_current_user
@@ -273,3 +273,24 @@ def analytics():
         "challenges": len(chs), "users": users, "solves": len(solves),
         "hint_unlocks": HintUnlocks.query.count(),
         "hardest": hardest, "by_category": bycat, "top_users": top}})
+
+
+@bp.route("/dashboard")
+@authed_only
+def dashboard():
+    return render_template("dashboard.html", nonce=session.get("nonce", ""))
+
+
+@bp.route("/api/catalog")
+@authed_only
+def catalog_api():
+    u = get_current_user()
+    solved = {x.challenge_id for x in Solves.query.filter_by(user_id=u.id).all()}
+    unlocked = {hu.target for hu in HintUnlocks.query.filter_by(user_id=u.id).all()}
+    out = []
+    for c in Challenges.query.order_by(Challenges.id).all():
+        hs = Hints.query.filter_by(challenge_id=c.id).order_by(Hints.cost).all()
+        hints = [{"id": h.id, "cost": h.cost, "content": (h.content if h.id in unlocked else None)} for h in hs]
+        out.append({"id": c.id, "name": c.name, "category": c.category, "value": c.value,
+                    "description": c.description, "solved": c.id in solved, "hints": hints})
+    return jsonify({"success": True, "data": out})

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="csrf-token" content="{{ nonce }}" />
+<title>RootPath — Cyber Range</title>
+<style>
+  :root{
+    --bg:#071019;--bg2:#0a1420;--panel:#0d1824;--panel2:#101d2a;--line:#1d2b3a;
+    --text:#eef5ff;--muted:#8fa3b8;--blue:#4da3ff;--cyan:#38e7d0;--green:#36e28a;
+    --purple:#9d7cff;--red:#ff6677;--amber:#f5c96a;--radius:18px;--shadow:0 20px 60px rgba(0,0,0,.28);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:radial-gradient(circle at 12% 10%,rgba(77,163,255,.08),transparent 28%),radial-gradient(circle at 88% 8%,rgba(157,124,255,.06),transparent 25%),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;min-height:100vh}
+  button,input,textarea,select{font:inherit}
+  button{cursor:pointer}
+  a{color:inherit;text-decoration:none}
+  .shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  .sidebar{position:sticky;top:0;height:100vh;padding:28px 22px;border-right:1px solid var(--line);background:rgba(5,12,20,.86);backdrop-filter:blur(14px);display:flex;flex-direction:column;gap:28px}
+  .brand{display:flex;align-items:center;gap:12px;font-size:24px;font-weight:800;letter-spacing:.2px}
+  .brand-mark{width:42px;height:42px;border:1px solid rgba(77,163,255,.65);border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(77,163,255,.15),rgba(56,231,208,.04));box-shadow:0 0 30px rgba(77,163,255,.12);font-weight:900;color:var(--blue)}
+  .brand small{display:block;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;margin-top:3px}
+  .nav{display:flex;flex-direction:column;gap:8px}
+  .nav-btn{width:100%;border:0;background:transparent;color:var(--muted);display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;text-align:left;transition:.18s ease}
+  .nav-btn:hover{background:#0f1c29;color:var(--text)}
+  .nav-btn.active{color:var(--text);background:linear-gradient(90deg,rgba(77,163,255,.16),rgba(77,163,255,.05));box-shadow:inset 0 0 0 1px rgba(77,163,255,.22)}
+  .nav-icon{width:21px;text-align:center;opacity:.95}
+  .sidebar-bottom{margin-top:auto;display:grid;gap:12px}
+  .mini-card{border:1px solid var(--line);background:#0a1520;border-radius:14px;padding:14px}
+  .mini-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .muted{color:var(--muted)}.tiny{font-size:12px}
+  .progress{height:8px;border-radius:999px;background:#172433;overflow:hidden;margin-top:10px}
+  .progress > span{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--blue));border-radius:999px}
+  .main{min-width:0}
+  .topbar{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:20px 34px;border-bottom:1px solid var(--line);background:rgba(7,16,25,.82);backdrop-filter:blur(14px)}
+  .top-title h1{font-size:18px;margin:0;font-weight:750}
+  .top-title p{font-size:12px;color:var(--muted);margin:4px 0 0}
+  .top-actions{display:flex;align-items:center;gap:10px}
+  .icon-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#0b1621;color:var(--text)}
+  .profile{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:#0b1621;border-radius:14px;padding:7px 12px}
+  .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--blue),var(--purple));font-weight:800}
+  .content{max-width:1500px;margin:0 auto;padding:38px 34px 70px}
+  .page{display:none;animation:fade .2s ease}.page.active{display:block}
+  @keyframes fade{from{opacity:.3;transform:translateY(3px)}to{opacity:1;transform:none}}
+  .page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:30px}
+  .page-head h2{font-size:34px;line-height:1.05;margin:0 0 10px}
+  .page-head p{margin:0;color:var(--muted);max-width:760px;line-height:1.6}
+  .actions{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{border:1px solid var(--line);border-radius:12px;padding:11px 16px;background:#0e1925;color:var(--text);font-weight:700;transition:.15s ease}
+  .btn:hover{transform:translateY(-1px);border-color:#314459}
+  .btn.primary{background:linear-gradient(135deg,#2f8fff,#4da3ff);border-color:transparent;color:white;box-shadow:0 10px 28px rgba(77,163,255,.18)}
+  .btn.success{background:rgba(54,226,138,.09);border-color:rgba(54,226,138,.5);color:#6ef1aa}
+  .btn.danger{background:rgba(255,102,119,.08);border-color:rgba(255,102,119,.45);color:#ff8896}
+  .btn.purple{background:rgba(157,124,255,.08);border-color:rgba(157,124,255,.45);color:#b69cff}
+  .btn:disabled{opacity:.38;cursor:not-allowed;transform:none}
+  .grid{display:grid;gap:22px}
+  .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .challenge-layout{grid-template-columns:minmax(0,1.35fr) minmax(360px,.65fr);align-items:start}
+  .card{border:1px solid var(--line);background:linear-gradient(180deg,rgba(15,27,39,.92),rgba(10,21,32,.92));border-radius:var(--radius);box-shadow:var(--shadow)}
+  .card-pad{padding:24px}
+  .card-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
+  .card-head h3{margin:0;font-size:18px}
+  .kicker{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--cyan);font-weight:800}
+  .stat{padding:20px}.stat .value{font-size:30px;font-weight:800;letter-spacing:-.5px;margin-top:8px}.stat .label{font-size:13px;color:var(--muted)}
+  .hero{position:relative;overflow:hidden;padding:30px;border:1px solid #203247;border-radius:24px;background:linear-gradient(135deg,rgba(77,163,255,.12),transparent 46%),linear-gradient(180deg,#0f1d2a,#0b1621);margin-bottom:24px}
+  .hero h3{font-size:30px;margin:6px 0 10px}
+  .hero p{color:#aebfd0;max-width:800px;line-height:1.7}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;border:1px solid #2a3a4a;background:#0d1925;color:#b8c9da;font-size:12px;font-weight:700}
+  .chip.green{color:#73efad;border-color:rgba(54,226,138,.35);background:rgba(54,226,138,.06)}
+  .chip.blue{color:#7cbaff;border-color:rgba(77,163,255,.35);background:rgba(77,163,255,.06)}
+  .chip.purple{color:#c0aaff;border-color:rgba(157,124,255,.35);background:rgba(157,124,255,.06)}
+  .list{display:grid;gap:10px}
+  .list-item{border:1px solid var(--line);background:#0b1621;border-radius:13px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:14px;cursor:pointer}
+  .list-item:hover{border-color:#30455b}
+  .list-title{font-weight:750}.list-sub{font-size:12px;color:var(--muted);margin-top:4px}
+  .badge{font-size:11px;padding:5px 8px;border-radius:8px;background:#142436;color:#9ec2e9;border:1px solid #223950}
+  .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(54,226,138,.65);display:inline-block}
+  .challenge-desc{color:#b2c2d2;line-height:1.75;margin:18px 0 26px;font-size:15px;white-space:pre-wrap}
+  .hint{border:1px solid var(--line);border-radius:14px;background:#0a1520;overflow:hidden}
+  .hint button{width:100%;border:0;background:transparent;color:var(--text);padding:16px 18px;display:flex;justify-content:space-between;align-items:center;text-align:left}
+  .hint-body{display:none;border-top:1px solid var(--line);padding:16px 18px;color:#a8bacb;line-height:1.6}
+  .hint.open .hint-body{display:block}
+  .flag-row{display:flex;gap:12px}
+  .input{width:100%;border:1px solid #26384a;background:#08131d;color:var(--text);border-radius:12px;padding:13px 14px;outline:none}
+  .input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(77,163,255,.09)}
+  textarea.input{min-height:170px;resize:vertical}
+  .lab-card{position:sticky;top:100px}
+  .lab-status{display:grid;gap:12px;padding:18px;border:1px solid var(--line);border-radius:14px;background:#09141e}
+  .lab-row{display:flex;justify-content:space-between;gap:16px;align-items:center}
+  .lab-row span:first-child{color:var(--muted)}
+  .timer{font-size:27px;font-weight:850;letter-spacing:1px;color:var(--green)}
+  .lab-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px}
+  .log{height:225px;overflow:auto;background:#061018;border:1px solid var(--line);border-radius:14px;padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;line-height:1.7;color:#a9c2d9}
+  .log .ok{color:#62e9a1}.log .warn{color:#f5c96a}.log .info{color:#72b9ff}.log .bad{color:#ff7c8a}
+  .route-card{padding:24px;position:relative;overflow:hidden}
+  .route-card .route-icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:#101f2f;border:1px solid #233a50;font-size:22px}
+  .route-card h3{margin:18px 0 8px;font-size:21px}
+  .route-card p{color:var(--muted);font-size:13px;line-height:1.6;min-height:42px}
+  .route-meta{display:flex;justify-content:space-between;color:#9db1c5;font-size:12px;margin-top:16px}
+  .exam-banner{padding:30px;border-radius:22px;border:1px solid rgba(157,124,255,.28);background:linear-gradient(135deg,rgba(157,124,255,.11),rgba(77,163,255,.05))}
+  .exam-timer{font-size:56px;font-weight:900;letter-spacing:2px}
+  .exam-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px}
+  .exam-rule{padding:16px;border-radius:14px;border:1px solid var(--line);background:#0b1621}
+  .metric-chart{height:220px;display:flex;align-items:flex-end;gap:13px;padding-top:22px}
+  .bar{flex:1;min-width:20px;background:linear-gradient(180deg,var(--blue),rgba(77,163,255,.18));border-radius:9px 9px 3px 3px;position:relative}
+  .bar::after{content:attr(data-label);position:absolute;bottom:-24px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted)}
+  .writeup-card h3{margin:0 0 8px}.writeup-card p{color:var(--muted);line-height:1.6;font-size:13px}
+  .writeup-footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--line);font-size:13px}
+  th{color:#91a5ba;font-weight:700}td{color:#d8e6f4}tr:last-child td{border-bottom:0}
+  .toast{position:fixed;right:26px;bottom:26px;z-index:99;background:#0d1a25;border:1px solid #29415a;color:var(--text);padding:13px 16px;border-radius:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);pointer-events:none;transition:.18s ease}
+  .toast.show{opacity:1;transform:none}
+  @media(max-width:1180px){.shell{grid-template-columns:90px 1fr}.sidebar{padding:24px 14px}.brand span,.nav-label,.sidebar-bottom{display:none}.brand{justify-content:center}.nav-btn{justify-content:center}.challenge-layout,.grid-4{grid-template-columns:1fr 1fr}}
+  @media(max-width:850px){.shell{display:block}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);flex-direction:row;align-items:center;overflow:auto;padding:12px}.brand{min-width:max-content}.brand span{display:block}.nav{flex-direction:row}.nav-btn{width:auto}.nav-label{display:inline}.sidebar-bottom{display:none}.topbar{padding:16px 18px}.content{padding:26px 18px 50px}.challenge-layout,.grid-2,.grid-3,.grid-4,.exam-grid{grid-template-columns:1fr}.lab-card{position:static}.page-head{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">&gt;_</div><span>RootPath<small>AI Cyber Range</small></span></div>
+    <nav class="nav">
+      <button class="nav-btn active" data-page="desafios"><span class="nav-icon">◆</span><span class="nav-label">Desafíos</span></button>
+      <button class="nav-btn" data-page="rutas"><span class="nav-icon">◫</span><span class="nav-label">Rutas</span></button>
+      <button class="nav-btn" data-page="examen"><span class="nav-icon">⏱</span><span class="nav-label">Modo Examen</span></button>
+      <button class="nav-btn" data-page="analiticas"><span class="nav-icon">▥</span><span class="nav-label">Analíticas</span></button>
+      <button class="nav-btn" data-page="writeups"><span class="nav-icon">✎</span><span class="nav-label">Writeups</span></button>
+      <button class="nav-btn" data-page="usuarios"><span class="nav-icon">◎</span><span class="nav-label">Usuarios</span></button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="mini-card">
+        <div class="mini-row"><strong>Progreso global</strong><span class="tiny muted" id="sb-solved">–</span></div>
+        <div class="tiny muted" style="margin-top:6px" id="sb-route">–</div>
+        <div class="progress"><span id="sb-bar" style="width:0%"></span></div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-row"><span class="tiny muted">Plataforma</span><span class="tiny" id="sb-status">· cargando</span></div>
+        <div class="tiny muted" style="margin-top:8px" id="sb-node">Proxmox · agentmanaged</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="top-title"><h1 id="topTitle">Desafíos</h1><p id="topSub">Entrena, despliega y controla laboratorios efímeros.</p></div>
+      <div class="top-actions">
+        <a class="icon-btn" style="display:grid;place-items:center" href="/challenges" title="Catálogo CTFd">⌂</a>
+        <button class="icon-btn" title="Recargar" onclick="refreshAll()">↻</button>
+        <div class="profile"><div class="avatar" id="avatar">?</div><div><strong style="font-size:13px" id="uname">—</strong><div class="tiny muted" id="urole">Estudiante</div></div></div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- DESAFIOS -->
+      <section id="desafios" class="page active">
+        <div class="page-head">
+          <div>
+            <div class="kicker" id="ch-kicker">Desafío seleccionado</div>
+            <h2 id="ch-title">Cargando…</h2>
+            <p id="ch-sub">Selecciona un reto del catálogo.</p>
+          </div>
+          <div class="actions" id="ch-chips"></div>
+        </div>
+        <div class="grid challenge-layout">
+          <div class="grid">
+            <div class="card card-pad">
+              <div class="card-head"><div><div class="kicker">Objetivo</div><h3 id="ch-obj">—</h3></div><div class="chips" id="ch-tags"></div></div>
+              <p class="challenge-desc" id="ch-desc"></p>
+              <div class="grid grid-3">
+                <div class="stat card"><div class="label">Categoría</div><div class="value" style="font-size:22px" id="ch-cat">—</div></div>
+                <div class="stat card"><div class="label">Puntos</div><div class="value" style="font-size:22px" id="ch-val">—</div></div>
+                <div class="stat card"><div class="label">Estado</div><div class="value" style="font-size:22px" id="ch-state">—</div></div>
+              </div>
+            </div>
+
+            <div class="card card-pad">
+              <div class="card-head"><h3>Pistas</h3><span class="tiny muted">Se descuentan puntos al desbloquear (bloqueadas en modo examen)</span></div>
+              <div class="list" id="ch-hints"><div class="tiny muted">Sin pistas.</div></div>
+            </div>
+
+            <div class="card card-pad">
+              <div class="card-head"><h3>Enviar bandera</h3><span class="chip purple">Formato RP{...}</span></div>
+              <div class="flag-row">
+                <input class="input" id="flagInput" placeholder="RP{...}" />
+                <button class="btn primary" onclick="submitFlag()">Enviar</button>
+              </div>
+            </div>
+
+            <div class="card card-pad">
+              <div class="card-head"><h3>Otros desafíos</h3><a class="btn" href="/challenges">Ver catálogo</a></div>
+              <div class="list" id="ch-list"><div class="tiny muted">Cargando…</div></div>
+            </div>
+          </div>
+
+          <aside class="card card-pad lab-card">
+            <div class="card-head"><div><div class="kicker">Entorno</div><h3>Estado del reto</h3></div><span class="chip" id="lab-mode">—</span></div>
+            <div class="lab-status">
+              <div class="lab-row"><span>Plataforma</span><strong id="labState">· cargando</strong></div>
+              <div class="lab-row"><span>Endpoint</span><strong id="labEndpoint" style="text-align:right;max-width:60%;word-break:break-all">—</strong></div>
+              <div class="lab-row"><span>Tiempo de estudio</span><span class="timer" id="timer">60:00</span></div>
+              <div class="lab-row"><span>Nodo · CPU</span><strong id="nodeCpu">—</strong></div>
+              <div class="lab-row"><span>Nodo · RAM</span><strong id="nodeRam">—</strong></div>
+            </div>
+            <div class="lab-actions">
+              <button class="btn success" id="openBtn" onclick="startStudy()">▶ Iniciar</button>
+              <button class="btn danger" id="closeBtn" onclick="stopStudy()">■ Parar</button>
+              <button class="btn purple" id="restartBtn" onclick="resetStudy()">↻ Reiniciar</button>
+            </div>
+            <div class="mini-card" style="margin-top:16px"><div class="tiny" style="line-height:1.55"><strong>Nota:</strong> temporizador de estudio personal. Los <em>entornos efímeros por usuario</em> (TTL, aislamiento por VLAN) llegan en la Fase 1.</div></div>
+            <div style="height:18px"></div>
+            <div class="card-head"><h3>Registro</h3><button class="btn" onclick="clearLog()">Limpiar</button></div>
+            <div class="log" id="labLog"></div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- RUTAS -->
+      <section id="rutas" class="page">
+        <div class="page-head">
+          <div><div class="kicker">Aprendizaje dirigido</div><h2>Rutas</h2><p>Programas por certificación y dominio, con progreso y readiness calculados sobre tus resoluciones.</p></div>
+          <button class="btn primary" onclick="refreshAll()">Actualizar</button>
+        </div>
+        <div class="grid grid-3" id="routes-grid"><div class="card card-pad tiny muted">Cargando rutas…</div></div>
+      </section>
+
+      <!-- EXAMEN -->
+      <section id="examen" class="page">
+        <div class="page-head">
+          <div><div class="kicker">Simulación controlada</div><h2>Modo Examen</h2><p>Sesiones cronometradas, sin pistas y con informe obligatorio al finalizar.</p></div>
+          <button class="btn primary" onclick="startExam()">Nuevo simulacro</button>
+        </div>
+        <div class="exam-banner">
+          <div class="mini-row"><div><div class="kicker" id="ex-kicker">Estado</div><h3 style="font-size:26px;margin:8px 0" id="ex-title">Sin examen activo</h3></div><span class="chip purple" id="ex-chip">—</span></div>
+          <div class="exam-timer" id="examTimer">--:--:--</div>
+          <div class="muted" id="examSub">Inicia un simulacro para comenzar el cronómetro.</div>
+          <div class="exam-grid">
+            <div class="exam-rule"><strong>Retos del examen</strong><div class="tiny muted" style="margin-top:7px" id="ex-count">—</div></div>
+            <div class="exam-rule"><strong>Pistas</strong><div class="tiny muted" style="margin-top:7px">Deshabilitadas a nivel de servidor durante la sesión.</div></div>
+          </div>
+        </div>
+        <div class="grid grid-2" style="margin-top:22px">
+          <div class="card card-pad"><div class="card-head"><h3>Objetivos</h3><span class="chip" id="ex-progress">—</span></div><div class="list" id="ex-list"><div class="tiny muted">Sin examen activo.</div></div></div>
+          <div class="card card-pad"><div class="card-head"><h3>Informe</h3><span class="chip purple">Obligatorio</span></div>
+            <textarea class="input" id="examReport" placeholder="Resumen técnico, evidencias, pasos y conclusiones..."></textarea>
+            <div class="actions" style="margin-top:12px"><button class="btn" onclick="saveReport()">Guardar borrador</button><button class="btn primary" onclick="finishExam()">Enviar informe y finalizar</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ANALITICAS -->
+      <section id="analiticas" class="page">
+        <div class="page-head">
+          <div><div class="kicker">Visibilidad</div><h2>Analíticas</h2><p>Progreso, dificultad real de los retos y salud operativa del cyber range.</p></div>
+          <button class="btn primary" onclick="refreshAll()">Actualizar</button>
+        </div>
+        <div class="grid grid-4" id="an-stats"></div>
+        <div class="grid grid-2" style="margin-top:22px">
+          <div class="card card-pad"><div class="card-head"><h3>Resoluciones por categoría</h3><span class="tiny muted">Global</span></div><div class="metric-chart" id="an-bars"></div></div>
+          <div class="card card-pad"><div class="card-head"><h3>Retos a revisar</h3><span class="chip">Detección automática</span></div><div class="list" id="an-hard"><div class="tiny muted">Cargando…</div></div></div>
+        </div>
+      </section>
+
+      <!-- WRITEUPS -->
+      <section id="writeups" class="page">
+        <div class="page-head">
+          <div><div class="kicker">Base de conocimiento</div><h2>Writeups</h2><p>Documentación personal y revisable de cada reto resuelto.</p></div>
+          <a class="btn primary" href="/writeup-template">Plantilla</a>
+        </div>
+        <div class="card card-pad"><p class="muted" style="line-height:1.7;margin:0">El registro estructurado de writeups está disponible como <a href="/writeup-template" style="color:var(--blue)">plantilla publicada</a> en CTFd. La bitácora buscable con generación automática por el agente redactor se implementa en una fase posterior del roadmap.</p></div>
+      </section>
+
+      <!-- USUARIOS -->
+      <section id="usuarios" class="page">
+        <div class="page-head">
+          <div><div class="kicker">Administración</div><h2>Usuarios</h2><p>Estado de cuentas y actividad.</p></div>
+          <a class="btn primary" href="/admin/users">Gestionar en CTFd</a>
+        </div>
+        <div class="card card-pad">
+          <div class="card-head"><h3>Top usuarios por puntuación</h3><span class="chip" id="usr-count">—</span></div>
+          <div style="overflow:auto"><table><thead><tr><th>#</th><th>Usuario</th><th>Puntuación</th></tr></thead><tbody id="usr-body"><tr><td colspan="3" class="muted tiny">Cargando…</td></tr></tbody></table></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+const meta = {
+  desafios:["Desafíos","Entrena, explora y resuelve los retos del cyber range."],
+  rutas:["Rutas","Avanza por dominios, objetivos y certificaciones."],
+  examen:["Modo Examen","Simulaciones cronometradas con reglas estrictas."],
+  analiticas:["Analíticas","Métricas de aprendizaje, dificultad y operación."],
+  writeups:["Writeups","Tu base de conocimiento técnica."],
+  usuarios:["Usuarios","Administración y actividad de la comunidad."]
+};
+let CATALOG=[], PATHS=[], ANALYTICS=null, STATUS=null, SELECTED=null;
+
+function notify(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__tt);window.__tt=setTimeout(()=>t.classList.remove('show'),2400);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function log(kind,text){const el=document.getElementById('labLog');const d=document.createElement('div');d.className=kind;d.textContent='['+new Date().toLocaleTimeString('es-DO',{hour12:false})+'] '+text;el.appendChild(d);el.scrollTop=el.scrollHeight;}
+function clearLog(){document.getElementById('labLog').innerHTML='';}
+async function api(path,opts){opts=opts||{};opts.credentials='same-origin';opts.headers=Object.assign({'Content-Type':'application/json','CSRF-Token':CSRF},opts.headers||{});const r=await fetch(path,opts);let j=null;try{j=await r.json();}catch(e){}return {status:r.status,json:j};}
+
+// navegacion
+document.querySelectorAll('.nav-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  const id=btn.dataset.page;
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');document.getElementById(id).classList.add('active');
+  document.getElementById('topTitle').textContent=meta[id][0];
+  document.getElementById('topSub').textContent=meta[id][1];
+  window.scrollTo({top:0,behavior:'smooth'});
+}));
+
+// perfil + sidebar
+async function loadProfile(){
+  const r=await api('/api/v1/users/me');
+  if(r.status===200 && r.json && r.json.data){
+    const u=r.json.data;
+    document.getElementById('uname').textContent=u.name;
+    document.getElementById('avatar').textContent=(u.name||'?').charAt(0).toUpperCase();
+    document.getElementById('urole').textContent=(u.type==='admin')?'Administrador':(u.team_id?'Equipo':'Estudiante');
+  }
+}
+// catalogo
+async function loadCatalog(){
+  const r=await api('/plugins/rootpath/api/catalog');
+  if(r.status!==200||!r.json.data){document.getElementById('ch-list').innerHTML='<div class="tiny muted">No se pudo cargar el catálogo.</div>';return;}
+  CATALOG=r.json.data;
+  const solved=CATALOG.filter(c=>c.solved).length;
+  const pct=Math.round(100*solved/Math.max(1,CATALOG.length));
+  document.getElementById('sb-solved').textContent=solved+'/'+CATALOG.length;
+  document.getElementById('sb-bar').style.width=pct+'%';
+  if(!SELECTED&&CATALOG.length) SELECTED=CATALOG[0].id;
+  renderChallengeList(); renderChallenge();
+}
+function renderChallengeList(){
+  const el=document.getElementById('ch-list');
+  const others=CATALOG.filter(c=>c.id!==SELECTED).slice(0,12);
+  if(!others.length){el.innerHTML='<div class="tiny muted">No hay más retos.</div>';return;}
+  el.innerHTML=others.map(c=>`<div class="list-item" onclick="selectChallenge(${c.id})">
+    <div><div class="list-title">${esc(c.name)} ${c.solved?'<span style="color:var(--green)">✓</span>':''}</div>
+    <div class="list-sub">${esc(c.category)}</div></div><span class="badge">${c.value} pts</span></div>`).join('');
+}
+function selectChallenge(id){SELECTED=id;renderChallengeList();renderChallenge();window.scrollTo({top:0,behavior:'smooth'});}
+function renderChallenge(){
+  const c=CATALOG.find(x=>x.id===SELECTED);
+  if(!c)return;
+  document.getElementById('ch-kicker').textContent='Desafío #'+String(c.id).padStart(2,'0');
+  document.getElementById('ch-title').textContent=c.name;
+  document.getElementById('ch-sub').textContent=c.description?c.description.split('\n')[0].slice(0,140):'';
+  document.getElementById('ch-obj').textContent=c.name;
+  document.getElementById('ch-desc').textContent=c.description||'';
+  document.getElementById('ch-cat').textContent=c.category;
+  document.getElementById('ch-val').textContent=c.value+' pts';
+  document.getElementById('ch-state').innerHTML=c.solved?'<span style="color:var(--green)">Resuelto ✓</span>':'Pendiente';
+  document.getElementById('ch-chips').innerHTML=`<span class="chip ${c.solved?'green':'blue'}">${c.solved?'● Resuelto':'● Pendiente'}</span><span class="chip blue">${esc(c.category)}</span><span class="chip">${c.value} puntos</span>`;
+  document.getElementById('ch-tags').innerHTML=`<span class="chip">${esc(c.category)}</span>`;
+  // endpoint
+  const m=(c.description||'').match(/(https?:\/\/[^\s]+|ssh [^\n]+)/i);
+  document.getElementById('labEndpoint').textContent=m?m[1]:'adjunto / ver reto';
+  document.getElementById('lab-mode').textContent=m?'servicio':'estático';
+  // pistas
+  const h=document.getElementById('ch-hints');
+  if(!c.hints||!c.hints.length){h.innerHTML='<div class="tiny muted">Sin pistas.</div>';}
+  else h.innerHTML=c.hints.map((x,i)=>{
+    const unlocked=x.content!=null;
+    return `<div class="hint" id="hint-${x.id}"><button onclick="toggleHint(${x.id})"><span><strong>Pista ${i+1}</strong> <span class="muted">· ${x.cost} pts</span></span><span>${unlocked?'▾':'🔒'}</span></button>
+      <div class="hint-body">${unlocked?esc(x.content):`<button class="btn" onclick="unlockHint(${x.id})">Desbloquear (${x.cost} pts)</button>`}</div></div>`;
+  }).join('');
+}
+function toggleHint(id){const el=document.getElementById('hint-'+id);if(el)el.classList.toggle('open');}
+async function unlockHint(id){
+  const r=await api('/api/v1/unlocks',{method:'POST',body:JSON.stringify({target:id,type:'hints'})});
+  if(r.status===200){log('ok','Pista desbloqueada ('+id+')');await loadCatalog();const el=document.getElementById('hint-'+id);if(el)el.classList.add('open');}
+  else notify('No se pudo desbloquear: '+(r.json&&r.json.message?r.json.message:r.status));
+}
+async function submitFlag(){
+  const v=document.getElementById('flagInput').value.trim();
+  if(!v){notify('Escribe una bandera primero');return;}
+  if(!SELECTED){notify('Selecciona un reto');return;}
+  const r=await api('/api/v1/challenges/attempt',{method:'POST',body:JSON.stringify({challenge_id:SELECTED,submission:v})});
+  const st=r.json&&r.json.data&&r.json.data.status;
+  if(st==='correct'){notify('¡Correcto! Flag aceptada');log('ok','Flag correcta en reto '+SELECTED);document.getElementById('flagInput').value='';await loadCatalog();await loadPaths();await loadAnalytics();}
+  else if(st==='incorrect'){notify('Incorrecto');log('bad','Flag incorrecta en reto '+SELECTED);}
+  else notify('Respuesta: '+(r.json&&r.json.data&&r.json.data.message?r.json.data.message:r.status));
+}
+
+// rutas
+async function loadPaths(){
+  const r=await api('/plugins/rootpath/api/paths');
+  if(r.status!==200||!r.json.data)return;
+  PATHS=r.json.data;
+  const icons=['◇','⌘','▦','⌁','◈','◐','▷','✦'];
+  document.getElementById('routes-grid').innerHTML=PATHS.map((c,i)=>{
+    const tot=c.domain_detail.reduce((a,d)=>a+d.challenges.length,0);
+    const done=c.domain_detail.reduce((a,d)=>a+d.challenges.filter(x=>x.solved).length,0);
+    const pct=tot?Math.round(100*done/tot):0;
+    return `<div class="card route-card"><div class="route-icon">${icons[i%icons.length]}</div><h3>${esc(c.name)}</h3><p>${esc(c.description||'')}</p>
+      <div class="progress"><span style="width:${pct}%"></span></div>
+      <div class="route-meta"><span>${done} / ${tot} retos</span><span>readiness ${c.score}%</span></div></div>`;
+  }).join('');
+  const tot=PATHS.reduce((a,c)=>a+c.domain_detail.reduce((x,d)=>x+d.challenges.length,0),0);
+  const all=CATALOG.length; 
+  if(tot) document.getElementById('sb-route').textContent=PATHS.length+' rutas activas';
+}
+
+// analiticas
+async function loadAnalytics(){
+  const r=await api('/plugins/rootpath/api/analytics');
+  if(r.status!==200||!r.json.data)return;
+  ANALYTICS=r.json.data; const d=ANALYTICS;
+  document.getElementById('an-stats').innerHTML=
+    `<div class="card stat"><div class="label">Retos publicados</div><div class="value">${d.challenges}</div></div>
+     <div class="card stat"><div class="label">Usuarios</div><div class="value">${d.users}</div></div>
+     <div class="card stat"><div class="label">Resoluciones</div><div class="value">${d.solves}</div></div>
+     <div class="card stat"><div class="label">Pistas usadas</div><div class="value">${d.hint_unlocks}</div></div>`;
+  const max=Math.max(1,...d.by_category.map(c=>c.solves));
+  document.getElementById('an-bars').innerHTML=d.by_category.map(c=>`<div class="bar" data-label="${esc(c.category)}" style="height:${Math.max(4,Math.round(100*c.solves/max))}%" title="${esc(c.category)}: ${c.solves} solves"></div>`).join('');
+  document.getElementById('an-hard').innerHTML=d.hardest.slice(0,6).map(c=>`<div class="list-item" style="cursor:default"><div><div class="list-title">${esc(c.name)}</div><div class="list-sub">${c.solves} solves · ${c.solve_rate}%</div></div>${c.flag?'<span class="badge">REVISAR</span>':'<span style="color:var(--green)">OK</span>'}</div>`).join('')||'<div class="tiny muted">Sin datos.</div>';
+  document.getElementById('usr-body').innerHTML=d.top_users.map((u,i)=>`<tr><td>${i+1}</td><td><strong>${esc(u.user)}</strong></td><td>${u.score} pts</td></tr>`).join('')||'<tr><td colspan="3" class="tiny muted">Sin datos.</td></tr>';
+  document.getElementById('usr-count').textContent=d.users+' usuarios';
+}
+
+// estado plataforma
+async function loadStatus(){
+  const r=await api('/plugins/rootpath/api/status');
+  if(r.status!==200||!r.json)return; STATUS=r.json;
+  const paused=r.json.deploy_paused;
+  document.getElementById('labState').innerHTML=paused?'<span style="color:var(--amber)">En pausa por carga</span>':'<span class="status-dot"></span> Activa';
+  document.getElementById('sb-status').innerHTML=paused?'<span style="color:var(--amber)">· en pausa</span>':'<span class="status-dot"></span> Online';
+  const m=r.json.monitor&&r.json.monitor.metrics;
+  if(m){document.getElementById('nodeCpu').textContent=m.cpu_pct+'%';document.getElementById('nodeRam').textContent=m.mem_pct+'%';}
+}
+
+// examen
+async function loadExam(){
+  const r=await api('/plugins/rootpath/api/exam/status');
+  if(r.status!==200||!r.json)return; const j=r.json;
+  if(!j.active){
+    document.getElementById('ex-title').textContent='Sin examen activo';
+    document.getElementById('examTimer').textContent='--:--:--';
+    document.getElementById('ex-count').textContent='—';
+    document.getElementById('ex-progress').textContent='—';
+    document.getElementById('ex-list').innerHTML='<div class="tiny muted">Inicia un simulacro para ver los objetivos.</div>';
+    document.getElementById('ex-chip').textContent='inactivo';
+    if(j.expired) notify('Tu examen anterior expiró');
+    return;
+  }
+  document.getElementById('ex-title').textContent='Simulacro en curso';
+  document.getElementById('ex-chip').textContent='pistas bloqueadas';
+  document.getElementById('ex-count').textContent=j.challenges.length+' retos';
+  const done=j.challenges.filter(c=>c.solved).length;
+  document.getElementById('ex-progress').textContent=done+'/'+j.challenges.length+' completados';
+  document.getElementById('ex-list').innerHTML=j.challenges.map(c=>`<div class="list-item" style="cursor:default"><div><div class="list-title">${esc(c.name)}</div><div class="list-sub">${esc(c.category)}</div></div>${c.solved?'<span style="color:var(--green)">✓</span>':'<span class="badge">Pendiente</span>'}</div>`).join('');
+  window.__examRemaining=j.remaining;
+}
+async function startExam(){
+  const mins=prompt('Duración del simulacro (minutos):','180'); if(!mins)return;
+  const r=await api('/plugins/rootpath/api/exam/start',{method:'POST',body:JSON.stringify({duration_minutes:parseInt(mins)})});
+  if(r.status===200&&r.json.success){notify('Simulacro iniciado');log('warn','Examen iniciado · pistas bloqueadas');await loadExam();}
+  else notify('No se pudo iniciar: '+(r.json&&r.json.error||r.status));
+}
+async function saveReport(){const c=document.getElementById('examReport').value;const r=await api('/plugins/rootpath/api/exam/report',{method:'POST',body:JSON.stringify({content:c})});notify(r.json&&r.json.success?'Borrador guardado':'Error');}
+async function finishExam(){const c=document.getElementById('examReport').value;if(!c){notify('El informe es obligatorio');return;}const r=await api('/plugins/rootpath/api/exam/finish',{method:'POST',body:JSON.stringify({report:c,content:c})});notify(r.json&&r.json.success?'Informe entregado':'Error');await loadExam();}
+
+// temporizador de estudio (local)
+let study=3600,studyRun=false,studyT=null;
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+setInterval(()=>{const t=document.getElementById('timer');if(studyRun&&study>0){study--;t.textContent=fmt(study);}else if(studyRun&&study<=0){studyRun=false;t.textContent='00:00';log('bad','Tiempo de estudio agotado');}
+  // cronometro de examen (cuenta atras global)
+  if(window.__examRemaining!=null){window.__examRemaining--;const h=Math.floor(window.__examRemaining/3600),m2=Math.floor((window.__examRemaining%3600)/60),s2=window.__examRemaining%60;document.getElementById('examTimer').textContent=String(h).padStart(2,'0')+':'+String(m2).padStart(2,'0')+':'+String(s2).padStart(2,'0');}
+},1000);
+function startStudy(){studyRun=true;log('ok','Sesión de estudio iniciada');notify('Sesión de estudio iniciada');}
+function stopStudy(){studyRun=false;log('warn','Sesión de estudio detenida');notify('Sesión detenida');}
+function resetStudy(){study=3600;studyRun=true;document.getElementById('timer').textContent=fmt(study);log('info','Temporizador reiniciado a 60:00');notify('Temporizador reiniciado');}
+
+async function refreshAll(){await Promise.all([loadProfile(),loadCatalog(),loadPaths(),loadAnalytics(),loadStatus(),loadExam()]);log('info','Datos actualizados');}
+refreshAll();
+setInterval(loadExam,15000);
+setInterval(loadStatus,20000);
+</script>
+</body>
+</html>
