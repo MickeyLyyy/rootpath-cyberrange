@@ -52,5 +52,23 @@
     "image": "rootpath-v2-nimbusdrive",
     "internal_port": 5000,
     "kind": "web"
+  },
+  "BancoQuisqueya - Banca Digital": {
+    "service": "bqdigital",
+    "image": "rootpath-v2-bqdigital",
+    "internal_port": 5000,
+    "kind": "web"
+  },
+  "LuzClara Telecom - Facturacion Electronica (e-CF)": {
+    "service": "luzclara",
+    "image": "rootpath-v2-luzclara",
+    "internal_port": 5000,
+    "kind": "web"
+  },
+  "EDQ Energia - Portal de Servicios": {
+    "service": "edqenergia",
+    "image": "rootpath-v2-edqenergia",
+    "internal_port": 5000,
+    "kind": "web"
   }
 }

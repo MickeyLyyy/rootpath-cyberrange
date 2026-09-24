@@ -12,7 +12,8 @@ INTERNAL_URL=http://127.0.0.1:8080/$INTERNAL_PATH/thumb
 INTERNAL_NONCE=$INTERNAL_NONCE
 EOF
 
-printf '%s' "${RP_FLAG:-RP{noflag}}" > /flag.txt
+if [ -z "$RP_FLAG" ]; then RP_FLAG="RP{noflag}"; fi
+printf '%s' "$RP_FLAG" > /flag.txt
 chmod 600 /flag.txt
 
 export SIGNING_KEY INTERNAL_NONCE INTERNAL_PATH
