@@ -1,4 +1,8 @@
 .env
 .admin_token
+.student_token
 ctfd/logs/
 **/__pycache__/
+agents/pve_token
+agents/audit.jsonl
+runtime/

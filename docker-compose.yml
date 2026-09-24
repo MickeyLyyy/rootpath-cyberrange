@@ -19,6 +19,7 @@ services:
       - ctfd-uploads:/var/uploads
       - ./ctfd/logs:/var/log/CTFd
       - ./plugins/rootpath:/opt/CTFd/CTFd/plugins/rootpath
+      - ./runtime:/opt/CTFd/runtime
     depends_on:
       db:
         condition: service_healthy

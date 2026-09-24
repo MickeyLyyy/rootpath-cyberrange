@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, abort
 from CTFd.models import db, Challenges, Solves, Hints, HintUnlocks, Users
@@ -180,3 +181,46 @@ def _block_hints_during_exam():
         return
     if RootPathExam.query.filter_by(user_id=u.id, status="active").first():
         abort(403, description="Las pistas estan deshabilitadas durante el modo examen.")
+
+
+# ---------- integracion con agentes (Fase 3) ----------
+def _runtime(name, default=None):
+    p = "/opt/CTFd/runtime/" + name
+    return open(p).read().strip() if os.path.exists(p) else default
+
+
+@bp.route("/api/status")
+def agent_status():
+    import json as _json
+    paused = _runtime("deploy_paused", "0") == "1"
+    ms = _runtime("monitor_status.json")
+    try:
+        monitor = _json.loads(ms) if ms else None
+    except Exception:
+        monitor = None
+    return jsonify({"success": True, "deploy_paused": paused, "monitor": monitor})
+
+
+@bp.route("/api/agent/hint")
+def agent_hint():
+    key = request.headers.get("X-Agent-Key", "")
+    expected = _runtime("agent_key")
+    if not expected or key != expected:
+        abort(403, description="agent key invalida")
+    cid = request.args.get("challenge_id", type=int)
+    level = request.args.get("level", type=int, default=1)
+    hs = Hints.query.filter_by(challenge_id=cid).order_by(Hints.cost).all()
+    if not hs:
+        return jsonify({"success": False, "error": "sin pistas para el reto"}), 404
+    idx = max(1, min(level, len(hs))) - 1
+    h = hs[idx]
+    return jsonify({"success": True, "challenge_id": cid, "level": idx + 1,
+                    "cost": h.cost, "content": h.content})
+
+
+@bp.before_app_request
+def _pause_guard():
+    if request.method != "POST":
+        return
+    if request.path == "/plugins/rootpath/api/exam/start" and _runtime("deploy_paused", "0") == "1":
+        abort(503, description="Plataforma en pausa por carga alta (monitor).")
