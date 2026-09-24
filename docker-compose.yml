@@ -1,0 +1,58 @@
+name: rootpath-platform
+services:
+  ctfd:
+    image: ctfd/ctfd:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      UPLOAD_FOLDER: /var/uploads
+      SECRET_KEY: ${SECRET_KEY}
+      DATABASE_URL: mysql+pymysql://${DB_USER}:${DB_PASSWORD}@db/ctfd
+      REDIS_URL: redis://cache:6379
+      WORKERS: "2"
+      LOG_FOLDER: /var/log/CTFd
+      ACCESS_LOG: "-"
+      ERROR_LOG: "-"
+      REVERSE_PROXY: "false"
+    volumes:
+      - ctfd-uploads:/var/uploads
+      - ./ctfd/logs:/var/log/CTFd
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+    networks:
+      - rootpath
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ctfd
+    volumes:
+      - ctfd-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - rootpath
+  cache:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - ctfd-cache:/data
+    networks:
+      - rootpath
+volumes:
+  ctfd-uploads:
+  ctfd-db:
+  ctfd-cache:
+networks:
+  rootpath:
+    name: rootpath

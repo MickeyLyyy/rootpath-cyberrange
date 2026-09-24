@@ -1,0 +1,30 @@
+name: rootpath-challenges
+services:
+  web-source-comment:
+    build: ./web-source-comment
+    restart: unless-stopped
+    ports: ["8081:80"]
+  web-robots:
+    build: ./web-robots
+    restart: unless-stopped
+    ports: ["8082:80"]
+  web-lfi:
+    build: ./web-lfi
+    restart: unless-stopped
+    ports: ["8083:5000"]
+  web-sqli:
+    build: ./web-sqli
+    restart: unless-stopped
+    ports: ["8084:5000"]
+  web-cmdi:
+    build: ./web-cmdi
+    restart: unless-stopped
+    ports: ["8085:5000"]
+  linux-suid:
+    build: ./linux-suid
+    restart: unless-stopped
+    ports: ["2201:2222"]
+  linux-cron:
+    build: ./linux-cron
+    restart: unless-stopped
+    ports: ["2202:2222"]
