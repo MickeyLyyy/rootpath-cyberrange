@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from flask import Blueprint, jsonify, request, abort, session, render_template
+from flask import Blueprint, jsonify, request, abort, session, render_template, redirect
 from CTFd.models import db, Challenges, Solves, Hints, HintUnlocks, Users
 from CTFd.utils.decorators import authed_only
 from CTFd.utils.user import get_current_user
@@ -294,3 +294,48 @@ def catalog_api():
         out.append({"id": c.id, "name": c.name, "category": c.category, "value": c.value,
                     "description": c.description, "solved": c.id in solved, "hints": hints})
     return jsonify({"success": True, "data": out})
+
+
+# ---------- laboratorios (control real) ----------
+LAB_URL = "http://172.170.10.11:9001"
+
+
+def _lab_request(path, method="GET", payload=None):
+    import requests as _rq
+    key = _runtime("agent_key", "")
+    h = {"X-Agent-Key": key}
+    if method == "GET":
+        r = _rq.get(LAB_URL + path, headers=h, params=payload or {}, timeout=15)
+    else:
+        r = _rq.post(LAB_URL + path, headers=dict(h, **{"Content-Type": "application/json"}),
+                     json=payload or {}, timeout=180)
+    try:
+        return r.status_code, r.json()
+    except Exception:
+        return r.status_code, {"error": r.text[:200]}
+
+
+@bp.route("/api/lab/status")
+@authed_only
+def lab_status():
+    code, data = _lab_request("/lab/status", "GET", {"name": request.args.get("name", "")})
+    return jsonify(data), code
+
+
+@bp.route("/api/lab/control", methods=["POST"])
+@authed_only
+def lab_control():
+    d = request.get_json() or {}
+    action = d.get("action")
+    if action not in ("start", "stop", "restart"):
+        return jsonify({"success": False, "error": "accion invalida"}), 400
+    code, data = _lab_request("/lab/" + action, "POST", {"name": d.get("name")})
+    return jsonify(data), code
+
+
+@bp.before_app_request
+def _landing_redirect():
+    if request.method == "GET" and request.path == "/":
+        u = get_current_user()
+        if u:
+            return redirect("/plugins/rootpath/dashboard")

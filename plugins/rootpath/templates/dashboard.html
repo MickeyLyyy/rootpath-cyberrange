@@ -202,16 +202,16 @@
             <div class="lab-status">
               <div class="lab-row"><span>Plataforma</span><strong id="labState">· cargando</strong></div>
               <div class="lab-row"><span>Endpoint</span><strong id="labEndpoint" style="text-align:right;max-width:60%;word-break:break-all">—</strong></div>
-              <div class="lab-row"><span>Tiempo de estudio</span><span class="timer" id="timer">60:00</span></div>
+              <div class="lab-row"><span>Servicio</span><strong id="labService">—</strong></div>
               <div class="lab-row"><span>Nodo · CPU</span><strong id="nodeCpu">—</strong></div>
               <div class="lab-row"><span>Nodo · RAM</span><strong id="nodeRam">—</strong></div>
             </div>
             <div class="lab-actions">
-              <button class="btn success" id="openBtn" onclick="startStudy()">▶ Iniciar</button>
-              <button class="btn danger" id="closeBtn" onclick="stopStudy()">■ Parar</button>
-              <button class="btn purple" id="restartBtn" onclick="resetStudy()">↻ Reiniciar</button>
+              <button class="btn success" id="openBtn" onclick="labAction('start')">▶ Abrir</button>
+              <button class="btn danger" id="closeBtn" onclick="labAction('stop')">■ Parar</button>
+              <button class="btn purple" id="restartBtn" onclick="labAction('restart')">↻ Reiniciar</button>
             </div>
-            <div class="mini-card" style="margin-top:16px"><div class="tiny" style="line-height:1.55"><strong>Nota:</strong> temporizador de estudio personal. Los <em>entornos efímeros por usuario</em> (TTL, aislamiento por VLAN) llegan en la Fase 1.</div></div>
+            <div class="mini-card" style="margin-top:16px"><div class="tiny" style="line-height:1.55"><strong>Control real:</strong> Abrir/Parar/Reiniciar actúa sobre el contenedor del reto. Los entornos efímeros por usuario (TTL, VLAN) llegan en la Fase 1.</div></div>
             <div style="height:18px"></div>
             <div class="card-head"><h3>Registro</h3><button class="btn" onclick="clearLog()">Limpiar</button></div>
             <div class="log" id="labLog"></div>
@@ -269,9 +269,9 @@
       <section id="writeups" class="page">
         <div class="page-head">
           <div><div class="kicker">Base de conocimiento</div><h2>Writeups</h2><p>Documentación personal y revisable de cada reto resuelto.</p></div>
-          <a class="btn primary" href="/writeup-template">Plantilla</a>
+          <button class="btn primary" onclick="notify('La bitácora de writeups llega en una fase posterior')">Nuevo writeup</button>
         </div>
-        <div class="card card-pad"><p class="muted" style="line-height:1.7;margin:0">El registro estructurado de writeups está disponible como <a href="/writeup-template" style="color:var(--blue)">plantilla publicada</a> en CTFd. La bitácora buscable con generación automática por el agente redactor se implementa en una fase posterior del roadmap.</p></div>
+        <div class="card card-pad"><p class="muted" style="line-height:1.7;margin:0">El registro estructurado de writeups y su generación automática por el agente redactor se implementan en una fase posterior del roadmap.</p></div>
       </section>
 
       <!-- USUARIOS -->
@@ -367,6 +367,7 @@ function renderChallenge(){
   const m=(c.description||'').match(/(https?:\/\/[^\s]+|ssh [^\n]+)/i);
   document.getElementById('labEndpoint').textContent=m?m[1]:'adjunto / ver reto';
   document.getElementById('lab-mode').textContent=m?'servicio':'estático';
+  loadLab(c.name);
   // pistas
   const h=document.getElementById('ch-hints');
   if(!c.hints||!c.hints.length){h.innerHTML='<div class="tiny muted">Sin pistas.</div>';}
@@ -471,16 +472,35 @@ async function startExam(){
 async function saveReport(){const c=document.getElementById('examReport').value;const r=await api('/plugins/rootpath/api/exam/report',{method:'POST',body:JSON.stringify({content:c})});notify(r.json&&r.json.success?'Borrador guardado':'Error');}
 async function finishExam(){const c=document.getElementById('examReport').value;if(!c){notify('El informe es obligatorio');return;}const r=await api('/plugins/rootpath/api/exam/finish',{method:'POST',body:JSON.stringify({report:c,content:c})});notify(r.json&&r.json.success?'Informe entregado':'Error');await loadExam();}
 
-// temporizador de estudio (local)
-let study=3600,studyRun=false,studyT=null;
-function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
-setInterval(()=>{const t=document.getElementById('timer');if(studyRun&&study>0){study--;t.textContent=fmt(study);}else if(studyRun&&study<=0){studyRun=false;t.textContent='00:00';log('bad','Tiempo de estudio agotado');}
-  // cronometro de examen (cuenta atras global)
+// control real del laboratorio
+let LAB=null;
+function setLabButtons(on){['openBtn','closeBtn','restartBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=!on;});}
+async function loadLab(name){
+  LAB=null; setLabButtons(false);
+  const svc=document.getElementById('labService');
+  if(svc) svc.textContent='—';
+  if(!name) return;
+  const r=await api('/plugins/rootpath/api/lab/status?name='+encodeURIComponent(name));
+  if(r.status===200 && r.json && r.json.service){
+    LAB=r.json;
+    if(svc) svc.innerHTML=r.json.running?'<span class="status-dot"></span> en ejecución':'<span style="color:var(--muted)">detenido</span>';
+    setLabButtons(true);
+  }else{
+    if(svc) svc.textContent='sin servicio (reto estático)';
+  }
+}
+async function labAction(action){
+  if(!LAB){notify('Este reto no tiene servicio controlable');return;}
+  notify('Acción: '+action+'…'); log('info','Laboratorio '+action+' · '+LAB.service);
+  const r=await api('/plugins/rootpath/api/lab/control',{method:'POST',body:JSON.stringify({name:LAB.name,action:action})});
+  if(r.status===200 && r.json && r.json.ok){notify('OK · '+action+' '+LAB.service);log('ok','Laboratorio '+action+' correcto · '+LAB.service);}
+  else{notify('Fallo al '+action);log('bad','Fallo '+action+' · '+((r.json&&r.json.out)||r.status));}
+  await loadLab(LAB.name);
+}
+// cronómetro de examen (cuenta atrás)
+setInterval(()=>{
   if(window.__examRemaining!=null){window.__examRemaining--;const h=Math.floor(window.__examRemaining/3600),m2=Math.floor((window.__examRemaining%3600)/60),s2=window.__examRemaining%60;document.getElementById('examTimer').textContent=String(h).padStart(2,'0')+':'+String(m2).padStart(2,'0')+':'+String(s2).padStart(2,'0');}
 },1000);
-function startStudy(){studyRun=true;log('ok','Sesión de estudio iniciada');notify('Sesión de estudio iniciada');}
-function stopStudy(){studyRun=false;log('warn','Sesión de estudio detenida');notify('Sesión detenida');}
-function resetStudy(){study=3600;studyRun=true;document.getElementById('timer').textContent=fmt(study);log('info','Temporizador reiniciado a 60:00');notify('Temporizador reiniciado');}
 
 async function refreshAll(){await Promise.all([loadProfile(),loadCatalog(),loadPaths(),loadAnalytics(),loadStatus(),loadExam()]);log('info','Datos actualizados');}
 refreshAll();
