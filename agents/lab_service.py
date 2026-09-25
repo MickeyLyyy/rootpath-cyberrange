@@ -104,6 +104,30 @@ def _firewall(subnet, add=True):
                 pass
 
 
+def _ipt(*args):
+    try:
+        return _run(["iptables"] + list(args), t=10)
+    except Exception:
+        return None
+
+
+def _ensure_expose():
+    """Permite el acceso externo (tailnet/host) a los rangos internos.
+
+    Docker anade reglas 'raw PREROUTING DROP' por contenedor (anti-spoofing),
+    que descartan el trafico entrante de fuera del bridge. Hay que aceptar
+    por delante (raw PREROUTING pos 1) y permitir el forward en DOCKER-USER.
+    """
+    for src in ("100.64.0.0/10", "172.170.10.10"):
+        base = ["-s", src, "-d", "10.100.0.0/14", "-j", "ACCEPT"]
+        r = _ipt("-t", "raw", "-C", "PREROUTING", *base)
+        if r is None or r.returncode != 0:
+            _ipt("-t", "raw", "-I", "PREROUTING", "1", *base)
+    r = _ipt("-C", "DOCKER-USER", "-i", "eth0", "-d", "10.100.0.0/14", "-j", "ACCEPT")
+    if r is None or r.returncode != 0:
+        _ipt("-I", "DOCKER-USER", "1", "-i", "eth0", "-d", "10.100.0.0/14", "-j", "ACCEPT")
+
+
 # ---------- laboratorios de servicio unico (web / linux) ----------
 def deploy(entry, cname, host_port, flag=None):
     _run(["docker", "rm", "-f", cname])
@@ -148,6 +172,7 @@ def deploy_machine(entry, cname, host_port, uid, flag):
               "-p", "0.0.0.0:%d:7681" % host_port,
               "-e", "TTYD_USER=player", "-e", "TTYD_PASS=%s" % _ttyd_pass(uid, service),
               entry["attacker_image"]])
+    _ensure_expose()
     return r
 
 
@@ -262,4 +287,5 @@ class H(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    _ensure_expose()
     HTTPServer(("0.0.0.0", 9001), H).serve_forever()
