@@ -4,7 +4,7 @@
 Modo por-usuario (efimero): 'deploy' crea un contenedor nuevo por (reto, usuario)
 con puerto propio; 'destroy' lo elimina. Allowlist por name en lab_map.json.
 """
-import json, re, subprocess
+import json, re, subprocess, random
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
@@ -47,10 +47,10 @@ def _pick_port(pref):
         pref = 0
     if PORT_MIN <= pref <= PORT_MAX and pref not in used:
         return pref
-    for p in range(PORT_MIN, PORT_MAX + 1):
-        if p not in used:
-            return p
-    return None
+    free = [p for p in range(PORT_MIN, PORT_MAX + 1) if p not in used]
+    if not free:
+        return None
+    return random.SystemRandom().choice(free)
 
 
 def _state(cname):

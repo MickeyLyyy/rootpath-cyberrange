@@ -136,7 +136,7 @@
       <button class="nav-btn" data-page="rutas"><span class="nav-icon">◫</span><span class="nav-label">Rutas</span></button>
       <button class="nav-btn" data-page="examen"><span class="nav-icon">⏱</span><span class="nav-label">Modo Examen</span></button>
       <button class="nav-btn" data-page="analiticas"><span class="nav-icon">▥</span><span class="nav-label">Analíticas</span></button>
-      <button class="nav-btn" data-page="writeups"><span class="nav-icon">✎</span><span class="nav-label">Writeups</span></button>
+      <button class="nav-btn" data-page="writeups" style="display:none"><span class="nav-icon">✎</span><span class="nav-label">Writeups</span></button>
       <button class="nav-btn" data-page="usuarios"><span class="nav-icon">◎</span><span class="nav-label">Usuarios</span></button>
       <button class="nav-btn" data-page="auditoria" id="navAudit" style="display:none"><span class="nav-icon">▤</span><span class="nav-label">Auditoría</span></button>
       <button class="nav-btn" id="navAdmin" style="display:none" onclick="window.location='/plugins/rootpath/admin'"><span class="nav-icon">⚙</span><span class="nav-label">Panel Admin</span></button>
@@ -256,7 +256,11 @@
       <section id="examen" class="page">
         <div class="page-head">
           <div><div class="kicker">Simulación controlada</div><h2>Modo Examen</h2><p>Sesiones cronometradas, sin pistas y con informe obligatorio al finalizar.</p></div>
-          <button class="btn primary" onclick="startExam()">Nuevo simulacro</button>
+          <div class="actions">
+            <select class="input" id="exCert" style="width:240px" title="Alcance del simulacro"><option value="">Todos los retos</option></select>
+            <input class="input" id="exDur" type="number" min="5" max="600" value="120" style="width:110px" title="Duración en minutos">
+            <button class="btn primary" onclick="startExam()">Nuevo simulacro</button>
+          </div>
         </div>
         <div class="exam-banner">
           <div class="mini-row"><div><div class="kicker" id="ex-kicker">Estado</div><h3 style="font-size:26px;margin:8px 0" id="ex-title">Sin examen activo</h3></div><span class="chip purple" id="ex-chip">—</span></div>
@@ -287,6 +291,10 @@
           <div class="card card-pad"><div class="card-head"><h3>Resoluciones por categoría</h3><span class="tiny muted">Global</span></div><div class="metric-chart" id="an-bars"></div></div>
           <div class="card card-pad"><div class="card-head"><h3>Retos a revisar</h3><span class="chip">Detección automática</span></div><div class="rows" id="an-hard"><div class="tiny muted">Cargando…</div></div></div>
         </div>
+        <div class="card card-pad" style="margin-top:26px">
+          <div class="card-head"><h3>Top usuarios</h3><span class="chip" id="an-users-count">—</span></div>
+          <div style="overflow:auto"><table><thead><tr><th>#</th><th>Usuario</th><th>Puntuación</th></tr></thead><tbody id="an-users"><tr><td colspan="3" class="muted tiny">Cargando…</td></tr></tbody></table></div>
+        </div>
       </section>
 
       <!-- WRITEUPS -->
@@ -305,8 +313,9 @@
           <button class="btn primary" onclick="manageUsers()">Gestionar</button>
         </div>
         <div class="card card-pad">
-          <div class="card-head"><h3>Top usuarios por puntuación</h3><span class="chip" id="usr-count">—</span></div>
-          <div style="overflow:auto"><table><thead><tr><th>#</th><th>Usuario</th><th>Puntuación</th></tr></thead><tbody id="usr-body"><tr><td colspan="3" class="muted tiny">Cargando…</td></tr></tbody></table></div>
+          <div class="card-head"><h3>Gestión de cuentas</h3><span class="chip" id="usr-count">—</span></div>
+          <p class="muted" style="line-height:1.75;margin:0 0 14px">La administración de cuentas, roles, baneos y estado de acceso se realiza en el panel administrativo.</p>
+          <button class="btn primary" onclick="manageUsers()">Abrir gestión de usuarios</button>
         </div>
       </section>
 
@@ -335,7 +344,7 @@
 const CSRF=document.querySelector('meta[name="csrf-token"]').content;
 const meta={desafios:["Desafíos","Entrena, explora y resuelve los retos del cyber range."],rutas:["Rutas","Avanza por dominios, objetivos y certificaciones."],examen:["Modo Examen","Simulaciones cronometradas con reglas estrictas."],analiticas:["Analíticas","Métricas de aprendizaje, dificultad y operación."],writeups:["Writeups","Tu base de conocimiento técnica."],usuarios:["Usuarios","Administración y actividad de la comunidad."],auditoria:["Auditoría","Quién desplegó, tumbó o reinició cada laboratorio (solo administradores)."]};
 let CATALOG=[],PATHS=[],ANALYTICS=null,STATUS=null,SELECTED=null,CURCAT=null,IS_ADMIN=false;
-const CAT_ICON={Web:"◧",Linux:"⌘",AD:"⬡",Blue:"▦",Crypto:"◇",Forensics:"◈"};
+const CAT_ICON={Web:"◧",Linux:"⌘",AD:"⬡",Blue:"▦",Crypto:"◇",Forensics:"◈",Pwn:"☠",Reversing:"⚙",Network:"⇄",Cloud:"☁",Mobile:"▣",OSINT:"◎",Misc:"✦"};
 function notify(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(window.__tt);window.__tt=setTimeout(()=>t.classList.remove('show'),2400);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function log(k,t){const el=document.getElementById('labLog');if(!el)return;const d=document.createElement('div');d.className=k;d.textContent='['+new Date().toLocaleTimeString('es-DO',{hour12:false})+'] '+t;el.appendChild(d);el.scrollTop=el.scrollHeight;}
@@ -343,7 +352,7 @@ function clearLog(){document.getElementById('labLog').innerHTML='';}
 async function api(path,opts){opts=opts||{};opts.credentials='same-origin';opts.headers=Object.assign({'Content-Type':'application/json','CSRF-Token':CSRF},opts.headers||{});const r=await fetch(path,opts);let j=null;try{j=await r.json();}catch(e){}return {status:r.status,json:j};}
 function screen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo({top:0,behavior:'smooth'});}
 function go(id){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.page===id));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.getElementById('topTitle').textContent=meta[id][0];document.getElementById('topSub').textContent=meta[id][1];window.scrollTo({top:0,behavior:'smooth'});}
-document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.page)go(b.dataset.page);}));
 
 async function loadProfile(){const r=await api('/plugins/rootpath/api/me');if(r.status===200&&r.json&&r.json.success){const u=r.json;IS_ADMIN=!!u.admin;document.getElementById('uname').textContent=u.name||'—';document.getElementById('avatar').textContent=(u.name||'?').charAt(0).toUpperCase();document.getElementById('urole').textContent=IS_ADMIN?'Administrador':'Estudiante';const nb=document.getElementById('navAudit');if(nb)nb.style.display=IS_ADMIN?'flex':'none';const na=document.getElementById('navAdmin');if(na)na.style.display=IS_ADMIN?'flex':'none';if(IS_ADMIN)loadAudit();}}
 function manageUsers(){if(IS_ADMIN){window.location='/admin/users';}else{notify('La gestión de usuarios es solo para administradores');}}
@@ -365,12 +374,13 @@ function renderFolders(){
   el.innerHTML=keys.map(cat=>{
     const arr=cats[cat],done=arr.filter(x=>x.solved).length,pct=Math.round(100*done/arr.length);
     const range=Math.min(...arr.map(x=>x.value))+'–'+Math.max(...arr.map(x=>x.value))+' pts';
-    return '<div class="folder" onclick="openCategory(\''+cat.replace(/'/g,"\\'")+'\')">'+
+    return '<div class="folder" data-cat="'+esc(cat)+'">'+
       '<div class="folder-icon">'+(CAT_ICON[cat]||'▣')+'</div>'+
       '<div class="folder-main"><div class="folder-title">'+esc(cat)+'</div><div class="folder-sub">'+arr.length+' retos · '+range+'</div>'+
       '<div class="progress"><span style="width:'+pct+'%"></span></div><div class="folder-sub">'+done+' resueltos · '+pct+'%</div></div>'+
       '<div class="folder-arrow">›</div></div>';
   }).join('');
+  el.querySelectorAll('.folder').forEach(f=>f.addEventListener('click',()=>openCategory(f.dataset.cat)));
 }
 function showCats(){CURCAT=null;renderFolders();screen('scr-cats');}
 function openCategory(cat){
@@ -460,8 +470,10 @@ async function loadAnalytics(){const r=await api('/plugins/rootpath/api/analytic
   const max=Math.max(1,...d.by_category.map(c=>c.solves));
   document.getElementById('an-bars').innerHTML=d.by_category.map(c=>'<div class="bar" data-label="'+esc(c.category)+'" style="height:'+Math.max(4,Math.round(100*c.solves/max))+'%" title="'+esc(c.category)+': '+c.solves+'"></div>').join('');
   document.getElementById('an-hard').innerHTML=d.hardest.slice(0,6).map(c=>'<div class="row" style="cursor:default"><div><div class="row-title">'+esc(c.name)+'</div><div class="row-sub">'+c.solves+' solves · '+c.solve_rate+'%</div></div>'+(c.flag?'<span class="badge">REVISAR</span>':'<span style="color:var(--green)">OK</span>')+'</div>').join('')||'<div class="tiny muted">Sin datos.</div>';
-  document.getElementById('usr-body').innerHTML=d.top_users.map((u,i)=>'<tr><td>'+(i+1)+'</td><td><strong>'+esc(u.user)+'</strong></td><td>'+u.score+' pts</td></tr>').join('')||'<tr><td colspan="3" class="tiny muted">Sin datos.</td></tr>';
-  document.getElementById('usr-count').textContent=d.users+' usuarios';}
+  const top=d.top_users.map((u,i)=>'<tr><td>'+(i+1)+'</td><td><strong>'+esc(u.user)+'</strong></td><td>'+u.score+' pts</td></tr>').join('')||'<tr><td colspan="3" class="tiny muted">Sin datos.</td></tr>';
+  const au=document.getElementById('an-users');if(au)au.innerHTML=top;
+  const auc=document.getElementById('an-users-count');if(auc)auc.textContent=d.users+' cuentas';
+  const uc=document.getElementById('usr-count');if(uc)uc.textContent=d.users+' cuentas';}
 // auditoria de laboratorios (solo admin)
 function audBadge(x){if(!x)return '';if(x.indexOf('ok')===0)return '<span class="chip green">'+esc(x)+'</span>';if(x.indexOf('denied')===0)return '<span class="chip" style="color:#f5c96a;border-color:rgba(245,201,106,.4)">'+esc(x)+'</span>';return '<span class="chip" style="color:#ff8896;border-color:rgba(255,102,119,.4)">'+esc(x)+'</span>';}
 async function loadAudit(){
@@ -492,12 +504,14 @@ async function loadStatus(){const r=await api('/plugins/rootpath/api/status');if
   const m=r.json.monitor&&r.json.monitor.metrics;if(m){document.getElementById('nodeCpu').textContent=m.cpu_pct+'%';document.getElementById('nodeRam').textContent=m.mem_pct+'%';}}
 // examen
 async function loadExam(){const r=await api('/plugins/rootpath/api/exam/status');if(r.status!==200||!r.json)return;const j=r.json;
-  if(!j.active){document.getElementById('ex-title').textContent='Sin examen activo';document.getElementById('examTimer').textContent='--:--:--';document.getElementById('ex-count').textContent='—';document.getElementById('ex-progress').textContent='—';document.getElementById('ex-list').innerHTML='<div class="tiny muted">Inicia un simulacro para ver los objetivos.</div>';document.getElementById('ex-chip').textContent='inactivo';if(j.expired)notify('Tu examen anterior expiró');return;}
+  if(!j.active){document.getElementById('ex-title').textContent='Sin examen activo';document.getElementById('examTimer').textContent='--:--:--';document.getElementById('ex-count').textContent='—';document.getElementById('ex-progress').textContent='—';document.getElementById('ex-list').innerHTML='<div class="tiny muted">Inicia un simulacro para ver los objetivos.</div>';document.getElementById('ex-chip').textContent='inactivo';fillExamCerts();if(j.expired)notify('Tu examen anterior expiró');return;}
   document.getElementById('ex-title').textContent='Simulacro en curso';document.getElementById('ex-chip').textContent='pistas bloqueadas';document.getElementById('ex-count').textContent=j.challenges.length+' retos';
+  document.getElementById('examReport').value=j.report||'';
   const done=j.challenges.filter(c=>c.solved).length;document.getElementById('ex-progress').textContent=done+'/'+j.challenges.length;
   document.getElementById('ex-list').innerHTML=j.challenges.map(c=>'<div class="row" style="cursor:default"><div><div class="row-title">'+esc(c.name)+'</div><div class="row-sub">'+esc(c.category)+'</div></div>'+(c.solved?'<span style="color:var(--green)">✓</span>':'<span class="badge">Pendiente</span>')+'</div>').join('');
   window.__examRemaining=j.remaining;}
-async function startExam(){const mins=prompt('Duración del simulacro (minutos):','180');if(!mins)return;const r=await api('/plugins/rootpath/api/exam/start',{method:'POST',body:JSON.stringify({duration_minutes:parseInt(mins)})});if(r.status===200&&r.json.success){notify('Simulacro iniciado');await loadExam();}else notify('No se pudo iniciar');}
+function fillExamCerts(){const sel=document.getElementById('exCert');if(!sel||sel.dataset.filled||!PATHS.length)return;PATHS.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);});sel.dataset.filled='1';}
+async function startExam(){const certEl=document.getElementById('exCert'),durEl=document.getElementById('exDur');const cert=certEl?certEl.value:'';const mins=parseInt((durEl&&durEl.value)||'120');if(!mins||mins<1){notify('Duración inválida');return;}const body={duration_minutes:mins};if(cert)body.cert_id=parseInt(cert);const r=await api('/plugins/rootpath/api/exam/start',{method:'POST',body:JSON.stringify(body)});if(r.status===200&&r.json.success){notify('Simulacro iniciado · '+r.json.challenges+' retos');await loadExam();}else notify((r.json&&r.json.error)||'No se pudo iniciar');}
 async function saveReport(){const c=document.getElementById('examReport').value;const r=await api('/plugins/rootpath/api/exam/report',{method:'POST',body:JSON.stringify({content:c})});notify(r.json&&r.json.success?'Borrador guardado':'Error');}
 async function finishExam(){const c=document.getElementById('examReport').value;if(!c){notify('El informe es obligatorio');return;}const r=await api('/plugins/rootpath/api/exam/finish',{method:'POST',body:JSON.stringify({report:c,content:c})});notify(r.json&&r.json.success?'Informe entregado':'Error');await loadExam();}
 setInterval(()=>{if(window.__examRemaining!=null){window.__examRemaining--;const h=Math.floor(window.__examRemaining/3600),m=Math.floor((window.__examRemaining%3600)/60),s=window.__examRemaining%60;document.getElementById('examTimer').textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}},1000);

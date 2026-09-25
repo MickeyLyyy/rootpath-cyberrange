@@ -113,7 +113,8 @@ def exam_status():
         if ch:
             chs.append({"id": ch.id, "name": ch.name, "category": ch.category, "solved": cid in solved})
     return jsonify({"active": True, "id": ex.id, "remaining": remaining, "challenges": chs,
-                    "report_saved": bool(ex.report)})
+                    "report_saved": bool(ex.report),
+                    "report": (ex.report.decode("utf-8", "replace") if ex.report else "")})
 
 
 @bp.route("/api/exam/start", methods=["POST"])
@@ -248,7 +249,10 @@ def agent_map():
 @bp.route("/api/analytics")
 @authed_only
 def analytics():
-    chs = Challenges.query.all()
+    q = Challenges.query
+    if not is_admin():
+        q = q.filter_by(state="visible")
+    chs = q.all()
     users = Users.query.count()
     solves = Solves.query.all()
     per = {}
@@ -383,7 +387,10 @@ def catalog_api():
     solved = {x.challenge_id for x in Solves.query.filter_by(user_id=u.id).all()}
     unlocked = {hu.target for hu in HintUnlocks.query.filter_by(user_id=u.id).all()}
     out = []
-    for c in Challenges.query.order_by(Challenges.id).all():
+    q = Challenges.query
+    if not is_admin():
+        q = q.filter_by(state="visible")
+    for c in q.order_by(Challenges.id).all():
         hs = Hints.query.filter_by(challenge_id=c.id).order_by(Hints.cost).all()
         hints = [{"id": h.id, "cost": h.cost, "content": (h.content if h.id in unlocked else None)} for h in hs]
         files = [{"name": os.path.basename(f.location), "url": "/files/" + f.location}
@@ -422,14 +429,19 @@ def _lab_request(path, method="GET", payload=None):
 
 
 def _client_ip():
-    """IP de origen del cliente. Prefiere X-Forwarded-For (detras de proxy)."""
-    xff = request.headers.get("X-Forwarded-For", "")
-    if xff:
-        return xff.split(",")[0].strip()[:64]
-    xri = request.headers.get("X-Real-IP", "").strip()
-    if xri:
-        return xri[:64]
-    return (request.remote_addr or "?")[:64]
+    """IP real del cliente.
+
+    No confia en X-Forwarded-For/X-Real-IP porque cualquier cliente puede
+    falsificarlas (la auditoria quedaria envenenada). Si en el futuro hay un
+    proxy inverso de confianza, habilitar RP_TRUSTED_PROXY con su IP.
+    """
+    trusted = (os.environ.get("RP_TRUSTED_PROXY", "") or "").strip()
+    raddr = (request.remote_addr or "?")[:64]
+    if trusted and raddr == trusted:
+        xff = request.headers.get("X-Forwarded-For", "")
+        if xff:
+            return xff.split(",")[0].strip()[:64]
+    return raddr
 
 
 def _log_lab_action(user, action, name, result, service=None, detail=None):
@@ -483,10 +495,12 @@ def _lab_meta(name):
 
 
 def _alloc_port(used):
-    for p in range(LAB_PORT_MIN, LAB_PORT_MAX + 1):
-        if p not in used:
-            return p
-    return None
+    """Puerto libre aleatorio: evita la enumeracion secuencial de instancias."""
+    import secrets
+    free = [p for p in range(LAB_PORT_MIN, LAB_PORT_MAX + 1) if p not in used]
+    if not free:
+        return None
+    return secrets.choice(free)
 
 
 def _instance_conn(inst):
@@ -551,6 +565,24 @@ def _close_on_solve(response):
         db.session.commit()
     except Exception:
         pass
+    return response
+
+
+@bp.after_app_request
+def _security_headers(response):
+    """Cabeceras de endurecimiento (no rompe el nucleo de CTFd)."""
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy",
+                                "geolocation=(), microphone=(), camera=(), payment=()")
+    # CSP solo en las vistas propias del plugin (dashboard/admin/welcome).
+    if request.path.startswith("/plugins/rootpath"):
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+            "script-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self'; "
+            "frame-ancestors 'none'; object-src 'none'; base-uri 'self'")
     return response
 
 
@@ -754,6 +786,9 @@ def _hide_ctfd():
     if request.method != "GET":
         return
     p = request.path
+    # Directorio publico de usuarios: solo administradores.
+    if p.startswith("/api/v1/users") and not is_admin():
+        abort(403, description="Directorio de usuarios restringido.")
     if p == "/":
         return _redir()
     if p == "/login":
