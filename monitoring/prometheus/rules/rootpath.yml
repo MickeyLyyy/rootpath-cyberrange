@@ -1,0 +1,72 @@
+groups:
+  - name: rootpath-infra
+    rules:
+      - alert: NodoCPUAlto
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m]))*100) > 85
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "CPU del nodo alta"
+          description: "Uso de CPU al {{ printf \"%.1f\" $value }}% durante 5m."
+
+      - alert: NodoRAMAlta
+        expr: (1 - node_memory_MemAvailable_bytes/node_memory_MemTotal_bytes)*100 > 85
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "RAM del nodo alta"
+          description: "Uso de RAM al {{ printf \"%.1f\" $value }}% durante 5m."
+
+      - alert: DiscoAlto
+        expr: (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"}/node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"})*100 > 80
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Disco alto"
+          description: "Uso de disco al {{ printf \"%.1f\" $value }}% en {{ $labels.mountpoint }}."
+
+      - alert: NodoCaido
+        expr: up{job="node"} == 0
+        for: 3m
+        labels: { severity: critical }
+        annotations:
+          summary: "node_exporter caido"
+
+  - name: rootpath-range
+    rules:
+      - alert: ExporterRootPathCaido
+        expr: rootpath_up == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "rootpath_exporter sin datos"
+          description: "El exporter no puede leer la BD del range."
+
+      - alert: ExporterNoResponde
+        expr: up{job="rootpath"} == 0
+        for: 3m
+        labels: { severity: critical }
+        annotations:
+          summary: "rootpath_exporter no responde"
+
+      - alert: DeployConError
+        expr: increase(rootpath_deploys_total{result=~"error.*"}[10m]) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Deploy de laboratorio con error"
+          description: "Se detectaron errores de deploy en los ultimos 10m."
+
+      - alert: AccionesDenegadas
+        expr: increase(rootpath_deploys_total{result=~"denied.*"}[10m]) > 20
+        labels: { severity: info }
+        annotations:
+          summary: "Pico de acciones denegadas"
+          description: "Muchas acciones rechazadas (posible escaneo o abuso de la API)."
+
+      - alert: InstanciasEnPico
+        expr: rootpath_instances_active > 20
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Muchas instancias activas"
+          description: "Instancias activas: {{ $value }}."

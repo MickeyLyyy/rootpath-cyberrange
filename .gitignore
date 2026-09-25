@@ -29,3 +29,4 @@ pipeline/published_services.json
 forensic-build/
 challenges-v2/forensics/*.img
 monitoring/.env
+monitoring/alertmanager/alertmanager.yml
