@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CraftWorld · Panel del Servidor</title>
+<link rel="stylesheet" href="/static/bootstrap.min.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="cw-body">
+<nav class="navbar navbar-dark cw-nav">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/">&#129518; CraftWorld</a>
+    <span class="badge bg-dark">Servidor Survival RD · 64 jugadores</span>
+  </div>
+</nav>
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="card cw-card">
+        <div class="card-header"><b>Diagnostico de conexion</b></div>
+        <div class="card-body">
+          <form method="POST" action="/ping">
+            <label class="form-label small">IP o dominio del servidor</label>
+            <input class="form-control mb-2" name="host" placeholder="ej. 127.0.0.1" required>
+            <button class="btn cw-btn w-100">Hacer ping</button>
+          </form>
+          <p class="small text-muted mt-2 mb-0">La consola ejecuta el diagnostico en el servidor de la sala.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="card cw-card">
+        <div class="card-header"><b>Consola</b></div>
+        <div class="card-body">
+          {% if out %}
+          <pre class="cw-console p-3">{{ out }}</pre>
+          {% else %}
+          <pre class="cw-console p-3 text-muted">(sin comandos ejecutados)</pre>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<footer class="text-center py-3 small cw-foot">CraftWorld &copy; 2026 · Minecraft-mode ON</footer>
+</body>
+</html>

@@ -70,5 +70,29 @@
     "image": "rootpath-v2-edqenergia",
     "internal_port": 5000,
     "kind": "web"
+  },
+  "ArcadeScore - Tabla de Puntuaciones": {
+    "service": "arcadescore",
+    "image": "rootpath-v2-arcadescore",
+    "internal_port": 5000,
+    "kind": "web"
+  },
+  "SkinShop - Tienda de Skins": {
+    "service": "skinshop",
+    "image": "rootpath-v2-skinshop",
+    "internal_port": 5000,
+    "kind": "web"
+  },
+  "SaveQuest - Visor de Partidas": {
+    "service": "savequest",
+    "image": "rootpath-v2-savequest",
+    "internal_port": 5000,
+    "kind": "web"
+  },
+  "CraftWorld - Panel del Servidor": {
+    "service": "craftworld",
+    "image": "rootpath-v2-craftworld",
+    "internal_port": 5000,
+    "kind": "web"
   }
 }

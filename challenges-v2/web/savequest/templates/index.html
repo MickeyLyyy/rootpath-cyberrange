@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SaveQuest · Visor de Partidas</title>
+<link rel="stylesheet" href="/static/bootstrap.min.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="sq-body">
+<nav class="navbar navbar-dark sq-nav">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/">&#9876; SaveQuest</a>
+    <span class="badge bg-dark">RPG de 16 bits · Servidor RD</span>
+  </div>
+</nav>
+<div class="container py-4">
+  <h1 class="h4">Tus partidas guardadas</h1>
+  <div class="list-group mb-4">
+    {% for s in saves %}
+    <a class="list-group-item list-group-item-action sq-item"
+       href="/ver?save={{ s }}">&#128190; {{ s }}</a>
+    {% endfor %}
+  </div>
+  <p class="small text-muted">El visor muestra el contenido del archivo que indiques en <code>?save=</code>.</p>
+</div>
+<footer class="text-center py-3 small sq-foot">SaveQuest &copy; 2026 · Continua tu aventura</footer>
+</body>
+</html>

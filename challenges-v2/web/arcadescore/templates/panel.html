@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArcadeScore · Panel</title>
+<link rel="stylesheet" href="/static/bootstrap.min.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="arc-body">
+<nav class="navbar navbar-dark arc-nav">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/">&#128377; ArcadeScore</a>
+    <a class="btn btn-sm btn-outline-light" href="/logout">Salir</a>
+  </div>
+</nav>
+<div class="container py-4">
+  <div class="card arc-card">
+    <div class="card-header"><b>Panel de jugador</b></div>
+    <div class="card-body">
+      <p>Bienvenido, <b>{{ user }}</b>.</p>
+      {% if admin %}
+        <div class="alert alert-success">
+          <b>PREMIOS DEL ADMINISTRADOR</b><br>
+          <span class="fs-4 fw-bold">{{ flag }}</span>
+        </div>
+      {% else %}
+        <div class="alert alert-warning mb-0">Solo el administrador puede ver los premios.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+</body>
+</html>

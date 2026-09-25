@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkinShop · Tienda de Skins</title>
+<link rel="stylesheet" href="/static/bootstrap.min.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<nav class="navbar navbar-dark sk-nav">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/">&#128142; SkinShop</a>
+    <span class="badge bg-light text-dark">Monedas: 1.250</span>
+  </div>
+</nav>
+<div class="container py-4">
+  <h1 class="h4">Catalogo de skins</h1>
+  <div class="row g-3" id="cat">
+    {% for it in items %}
+    <div class="col-md-3">
+      <div class="card sk-card h-100">
+        <div class="card-body text-center">
+          <div class="sk-icon">{{ it.icon|safe }}</div>
+          <h6 class="mb-1">{{ it.name }}</h6>
+          <p class="small text-muted mb-2">{{ it.desc }}</p>
+          <span class="badge bg-warning text-dark">{{ it.price }} monedas</span><br>
+          <button class="btn btn-sm sk-btn mt-2" onclick="verItem({{ it.id }})">Ver detalle</button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <pre class="mt-4 p-3" id="out" style="background:#0f172a;color:#a5f3fc;min-height:70px"></pre>
+  <!-- depuracion: el almacen tiene 9 referencias -->
+</div>
+<footer class="text-center py-3 small sk-foot">SkinShop &copy; 2026 · Battle Royale RD</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>

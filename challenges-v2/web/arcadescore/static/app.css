@@ -1,0 +1,7 @@
+body.arc-body{background:#0d0221}
+.arc-nav{background:#241734}
+.arc-card{background:#1a1a2e;color:#eaeaea;border:1px solid #6a0dad}
+.arc-card .card-header{background:#16213e;color:#f0a500;border-bottom:1px solid #6a0dad}
+.arc-btn{background:#f0a500;color:#0d0221;font-weight:bold}
+.arc-btn:hover{background:#ffc233;color:#0d0221}
+.arc-foot{color:#6a0dad}

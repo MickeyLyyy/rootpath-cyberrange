@@ -1,0 +1,7 @@
+body.sq-body{background:#0c120c}
+.sq-nav{background:#1d2d1d}
+.sq-item{background:#182418;color:#cfe8cf;border:1px solid #335533}
+.sq-item:hover{background:#223522;color:#fff}
+.sq-console{background:#0a0f0a;color:#7ee787;border:1px solid #335533;font-family:Consolas,monospace}
+.sq-btn{background:#335533;color:#fff}
+.sq-foot{color:#335533}

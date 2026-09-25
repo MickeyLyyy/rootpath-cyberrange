@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArcadeScore · Tabla de Puntuaciones</title>
+<link rel="stylesheet" href="/static/bootstrap.min.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="arc-body">
+<nav class="navbar navbar-dark arc-nav">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/">&#128377; ArcadeScore</a>
+    <span class="badge bg-dark">Sala de maquinas · Zona Colonial</span>
+  </div>
+</nav>
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="card arc-card">
+        <div class="card-header"><b>Acceso de jugador</b></div>
+        <div class="card-body">
+          <form method="POST" action="/login">
+            <input class="form-control mb-2" name="u" placeholder="usuario" required>
+            <input class="form-control mb-2" name="p" type="password" placeholder="clave" required>
+            <button class="btn arc-btn w-100">Entrar</button>
+          </form>
+          {% if error %}<p class="text-danger mt-2 mb-0">{{ error }}</p>{% endif %}
+          <p class="small text-muted mt-2 mb-0">Cuenta de prueba: <b>jugador</b> / <b>demo123</b></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="card arc-card">
+        <div class="card-header"><b>Tabla de puntuaciones</b></div>
+        <table class="table table-dark table-striped mb-0">
+          <thead><tr><th>#</th><th>Jugador</th><th>Maquina</th><th>Puntos</th></tr></thead>
+          <tbody>
+          {% for s in scores %}
+            <tr><td>{{ loop.index }}</td><td>{{ s.jugador }}</td><td>{{ s.juego }}</td><td>{{ s.puntos }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="small text-muted mt-3 mb-0">El administrador de la sala gestiona los premios desde su panel.</p>
+    </div>
+  </div>
+</div>
+<footer class="text-center py-3 small arc-foot">ArcadeScore &copy; 2026 · INSERT COIN</footer>
+</body>
+</html>
