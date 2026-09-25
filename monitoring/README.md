@@ -27,6 +27,18 @@ Credenciales de Grafana: en `monitoring/.env` (`GF_PASSWORD`) — **no versionad
 `rootpath_submissions_total{type}`, `rootpath_hint_unlocks_total`,
 `rootpath_challenges_total{state}`, `rootpath_up`.
 
+## Bot de Telegram (@Root_Path_bot)
+Responde en lenguaje natural y con comandos sobre todos los servicios:
+`/estado /contenedores /instancias /retos /usuarios /solves /puertos /host /acciones /ayuda`.
+Fuentes: MariaDB (CTFd), Prometheus y la API de Docker. Solo responde a `ALLOWED_CHAT` (`TELEGRAM_CHAT`).
+
+## Etiquetas de contenedores
+Cada contenedor de laboratorio lleva:
+`rootpath.challenge` (título del reto), `rootpath.service`, `rootpath.user`,
+`rootpath.kind` (web|machine), `rootpath.role` (target|attacker).
+Visibles en Portainer y en el bot (`/contenedores`).
+
+
 ## Operación
 ```bash
 cd /opt/rootpath/monitoring

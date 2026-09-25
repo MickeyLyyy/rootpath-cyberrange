@@ -129,11 +129,28 @@ def _ensure_expose():
 
 
 # ---------- laboratorios de servicio unico (web / linux) ----------
-def deploy(entry, cname, host_port, flag=None):
+def _labels(entry, name, uid, role=None):
+    """Etiquetas Docker para identificar reto/servicio/usuario en Portainer."""
+    lab = {
+        "rootpath.service": entry.get("service", ""),
+        "rootpath.challenge": (name or entry.get("service", "")),
+        "rootpath.user": str(uid if uid is not None else ""),
+        "rootpath.kind": entry.get("kind", "") or "",
+    }
+    if role:
+        lab["rootpath.role"] = role
+    out = []
+    for k, v in lab.items():
+        out += ["--label", "%s=%s" % (k, v)]
+    return out
+
+
+def deploy(entry, cname, host_port, flag=None, name=None, uid=None):
     _run(["docker", "rm", "-f", cname])
     args = ["docker", "run", "-d", "--name", cname, "--restart=no",
             "--memory", MEM, "--cpus", CPUS,
             "-p", "%d:%d" % (host_port, entry["internal_port"])]
+    args += _labels(entry, name, uid)
     if flag:
         args += ["-e", "RP_FLAG=%s" % flag]
     args += [entry["image"]]
@@ -145,7 +162,7 @@ def destroy(cname):
 
 
 # ---------- maquinas boot2root (red privada + caja atacante) ----------
-def deploy_machine(entry, cname, host_port, uid, flag):
+def deploy_machine(entry, cname, host_port, uid, flag, name=None):
     service = entry["service"]
     net = _range_net(uid)
     subnet = _subnet(uid)
@@ -163,12 +180,14 @@ def deploy_machine(entry, cname, host_port, uid, flag):
     r = _run(["docker", "run", "-d", "--name", cname, "--restart=no",
               "--memory", MEM, "--cpus", CPUS,
               "--network", net, "--ip", ip_t,
+              *_labels(entry, name, uid, "target"),
               "-e", "RP_FLAG=%s" % flag, entry["target_image"]])
     if r.returncode != 0:
         return r
     r = _run(["docker", "run", "-d", "--name", atk, "--restart=no",
               "--memory", MEM, "--cpus", CPUS,
               "--network", net, "--ip", ip_a,
+              *_labels(entry, name, uid, "attacker"),
               "-p", "0.0.0.0:%d:7681" % host_port,
               "-e", "TTYD_USER=player", "-e", "TTYD_PASS=%s" % _ttyd_pass(uid, service),
               entry["attacker_image"]])
@@ -251,7 +270,7 @@ class H(BaseHTTPRequestHandler):
                 return self._send(503, {"error": "sin puertos libres"})
             cname = _cname(e["service"], uid)
             if e.get("kind") == "machine":
-                r = deploy_machine(e, cname, port, uid, flag)
+                r = deploy_machine(e, cname, port, uid, flag, name)
                 if r.returncode != 0:
                     return self._send(200, {"ok": False, "out": (r.stdout + r.stderr)[-300:]})
                 ip_t, _ = _range_ips(uid)
@@ -260,7 +279,7 @@ class H(BaseHTTPRequestHandler):
                                         "host_port": port, "target_ip": ip_t,
                                         "ttyd_user": "player",
                                         "ttyd_pass": _ttyd_pass(uid, e["service"])})
-            r = deploy(e, cname, port, flag)
+            r = deploy(e, cname, port, flag, name, uid)
             if r.returncode != 0:
                 return self._send(200, {"ok": False, "out": (r.stdout + r.stderr)[-300:]})
             return self._send(200, {"ok": True, "container": cname, "service": e["service"],
