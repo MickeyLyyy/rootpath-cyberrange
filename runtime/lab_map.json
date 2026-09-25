@@ -94,5 +94,12 @@
     "image": "rootpath-v2-craftworld",
     "internal_port": 5000,
     "kind": "web"
+  },
+  "Colmado - Panel de Diagnostico": {
+    "kind": "machine",
+    "service": "colmado",
+    "target_image": "rootpath-v2-colmado",
+    "attacker_image": "rootpath-attacker",
+    "target_port": 8080
   }
 }

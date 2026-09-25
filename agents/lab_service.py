@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Servicio de control de laboratorios RootPath.
 
-Modo por-usuario (efimero): 'deploy' crea un contenedor nuevo por (reto, usuario)
-con puerto propio; 'destroy' lo elimina. Allowlist por name en lab_map.json.
+Modo por-usuario (efimero):
+  * kind "web"/"linux": un contenedor por (reto, usuario) con puerto propio.
+  * kind "machine"    : una red privada por usuario con un objetivo + una caja
+                        atacante (terminal web ttyd). Objetivo boot2root.
 """
-import json, re, subprocess, random
+import json, re, subprocess, random, hashlib, hmac
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
@@ -25,6 +27,35 @@ def _entry(name):
 def _cname(service, uid):
     safe = re.sub(r"[^a-zA-Z0-9_.-]", "-", "%s-u%s" % (service, uid))
     return ("rp-" + safe)[:63]
+
+
+def _atk_cname(service, uid):
+    safe = re.sub(r"[^a-zA-Z0-9_.-]", "-", "%s-atk-u%s" % (service, uid))
+    return ("rp-" + safe)[:63]
+
+
+def _subnet(uid):
+    uid = int(uid)
+    return "10.%d.%d.0/24" % (100 + (uid // 256), uid % 256)
+
+
+def _range_ips(uid):
+    uid = int(uid)
+    base = "10.%d.%d" % (100 + (uid // 256), uid % 256)
+    return base + ".10", base + ".5"
+
+
+def _range_net(uid):
+    return "rp-range-u%s" % uid
+
+
+def _ttyd_pass(uid, service):
+    try:
+        secret = open(BASE + "/runtime/flag_secret").read().strip()
+    except Exception:
+        secret = "rootpath"
+    return hmac.new(secret.encode(), ("ttyd:%d:%s" % (int(uid), service)).encode(),
+                    hashlib.sha256).hexdigest()[:12]
 
 
 def _run(args, t=180):
@@ -59,8 +90,23 @@ def _state(cname):
     return {"container": cname, "running": any(s == "running" for s in lines), "states": lines}
 
 
+def _firewall(subnet, add=True):
+    """Best-effort: aislar el rango del usuario de la LAN/host."""
+    rules = [
+        ["DOCKER-USER", "-s", subnet, "-d", "172.170.10.0/24", "-j", "DROP"],
+        ["INPUT", "-s", subnet, "-d", "172.170.10.11", "-j", "DROP"],
+    ]
+    for chain, *spec in rules:
+        for op in (("-I", chain, "1") if add else ("-D", chain)):
+            try:
+                _run(["iptables", "-w"] + list(op) + spec, t=10)
+            except Exception:
+                pass
+
+
+# ---------- laboratorios de servicio unico (web / linux) ----------
 def deploy(entry, cname, host_port, flag=None):
-    _run(["docker", "rm", "-f", cname])  # limpia restos
+    _run(["docker", "rm", "-f", cname])
     args = ["docker", "run", "-d", "--name", cname, "--restart=no",
             "--memory", MEM, "--cpus", CPUS,
             "-p", "%d:%d" % (host_port, entry["internal_port"])]
@@ -72,6 +118,57 @@ def deploy(entry, cname, host_port, flag=None):
 
 def destroy(cname):
     return _run(["docker", "rm", "-f", cname])
+
+
+# ---------- maquinas boot2root (red privada + caja atacante) ----------
+def deploy_machine(entry, cname, host_port, uid, flag):
+    service = entry["service"]
+    net = _range_net(uid)
+    subnet = _subnet(uid)
+    ip_t, ip_a = _range_ips(uid)
+    atk = _atk_cname(service, uid)
+    _run(["docker", "rm", "-f", cname])
+    _run(["docker", "rm", "-f", atk])
+    _run(["docker", "network", "rm", net])
+    r = _run(["docker", "network", "create", "--subnet", subnet, net])
+    if r.returncode != 0:
+        r = _run(["docker", "network", "create", net])
+        if r.returncode != 0:
+            return r
+    _firewall(subnet, add=True)
+    r = _run(["docker", "run", "-d", "--name", cname, "--restart=no",
+              "--memory", MEM, "--cpus", CPUS,
+              "--network", net, "--ip", ip_t,
+              "-e", "RP_FLAG=%s" % flag, entry["target_image"]])
+    if r.returncode != 0:
+        return r
+    r = _run(["docker", "run", "-d", "--name", atk, "--restart=no",
+              "--memory", MEM, "--cpus", CPUS,
+              "--network", net, "--ip", ip_a,
+              "-p", "0.0.0.0:%d:7681" % host_port,
+              "-e", "TTYD_USER=player", "-e", "TTYD_PASS=%s" % _ttyd_pass(uid, service),
+              entry["attacker_image"]])
+    return r
+
+
+def destroy_machine(entry, cname, uid):
+    service = entry["service"]
+    atk = _atk_cname(service, uid)
+    _run(["docker", "rm", "-f", cname])
+    _run(["docker", "rm", "-f", atk])
+    _run(["docker", "network", "rm", _range_net(uid)])
+    _firewall(_subnet(uid), add=False)
+
+
+def status_machine(entry, uid):
+    cname = _cname(entry["service"], uid)
+    atk = _atk_cname(entry["service"], uid)
+    s1 = _state(cname)
+    s2 = _state(atk)
+    ip_t, _ = _range_ips(uid)
+    return {"container": cname, "attacker": atk,
+            "running": s1["running"] and s2["running"],
+            "target_ip": ip_t, "states": s1["states"] + s2["states"]}
 
 
 class H(BaseHTTPRequestHandler):
@@ -102,6 +199,10 @@ class H(BaseHTTPRequestHandler):
             e = _entry(name)
             if not e:
                 return self._send(404, {"error": "no lab", "name": name})
+            if e.get("kind") == "machine":
+                st = status_machine(e, uid)
+                return self._send(200, {"name": name, "service": e["service"],
+                                        "kind": "machine", **st})
             cname = _cname(e["service"], uid)
             st = _state(cname)
             return self._send(200, {"name": name, "service": e["service"], "image": e["image"],
@@ -124,6 +225,16 @@ class H(BaseHTTPRequestHandler):
             if not port:
                 return self._send(503, {"error": "sin puertos libres"})
             cname = _cname(e["service"], uid)
+            if e.get("kind") == "machine":
+                r = deploy_machine(e, cname, port, uid, flag)
+                if r.returncode != 0:
+                    return self._send(200, {"ok": False, "out": (r.stdout + r.stderr)[-300:]})
+                ip_t, _ = _range_ips(uid)
+                return self._send(200, {"ok": True, "container": cname, "service": e["service"],
+                                        "image": e["target_image"], "kind": "machine",
+                                        "host_port": port, "target_ip": ip_t,
+                                        "ttyd_user": "player",
+                                        "ttyd_pass": _ttyd_pass(uid, e["service"])})
             r = deploy(e, cname, port, flag)
             if r.returncode != 0:
                 return self._send(200, {"ok": False, "out": (r.stdout + r.stderr)[-300:]})
@@ -133,13 +244,18 @@ class H(BaseHTTPRequestHandler):
         if u.path == "/lab/destroy":
             b = self._body()
             name = b.get("name"); uid = b.get("uid"); cname = b.get("container")
+            e = _entry(name)
+            if e and e.get("kind") == "machine":
+                cname = cname or _cname(e["service"], uid)
+                destroy_machine(e, cname, uid)
+                return self._send(200, {"ok": True, "container": cname})
             if not cname:
-                e = _entry(name)
                 if not e:
                     return self._send(404, {"error": "no lab", "name": name})
                 cname = _cname(e["service"], uid)
             r = destroy(cname)
-            return self._send(200, {"ok": True, "container": cname, "out": (r.stdout + r.stderr)[-200:]})
+            return self._send(200, {"ok": True, "container": cname,
+                                    "out": (r.stdout + r.stderr)[-200:]})
         if u.path.startswith("/lab/"):
             return self._send(404, {"error": "accion no soportada"})
         return self._send(404, {"error": "not found"})

@@ -498,10 +498,30 @@ def _alloc_port(used):
     return secrets.choice(free)
 
 
+def _ttyd_pass(uid, service):
+    """Clave del terminal web de la caja atacante (derivada del secreto)."""
+    try:
+        secret = open("/opt/CTFd/runtime/flag_secret", encoding="utf-8").read().strip()
+    except Exception:
+        secret = "rootpath"
+    import hmac as _h, hashlib as _ha
+    return _h.new(secret.encode(), ("ttyd:%d:%s" % (int(uid), service)).encode(),
+                  _ha.sha256).hexdigest()[:12]
+
+
+def _machine_target_ip(uid):
+    uid = int(uid)
+    return "10.%d.%d.10" % (100 + (uid // 256), uid % 256)
+
+
 def _instance_conn(inst):
     """Cadena de conexion que se muestra al usuario para su instancia."""
     if not inst:
         return None
+    if inst.kind == "machine":
+        return ("Terminal: http://%s:%d/  (usuario player / clave %s)  ·  objetivo: %s" % (
+            LAB_HOST, inst.host_port, _ttyd_pass(inst.user_id, inst.service),
+            _machine_target_ip(inst.user_id)))
     if inst.kind == "linux":
         meta = _lab_meta(inst.challenge_name) or {}
         return "ssh %s@%s -p %d   (password: %s)" % (
