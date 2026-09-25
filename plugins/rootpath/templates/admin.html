@@ -130,23 +130,14 @@ tr:last-child td{border-bottom:0}
         <button data-page="submissions" data-filter="correct">Correctas</button>
         <button data-page="submissions" data-filter="incorrect">Incorrectas</button>
       </div>
-      <button class="nav-item" data-link="/admin/pages"><span class="nav-icon">◫</span><span>Páginas</span></button>
-      <button class="nav-item" data-link="/admin/notifications"><span class="nav-icon">◌</span><span>Notificaciones</span></button>
       <button class="nav-item" data-link="/plugins/rootpath/dashboard"><span class="nav-icon">◈</span><span>Dashboard usuario</span></button>
-      <button class="nav-item" data-link="/admin/config"><span class="nav-icon">⚙</span><span>Configuración</span></button>
     </nav>
-  </div>
-  <div class="sidebar-bottom">
-    <div class="node">
-      <div class="node-row"><span class="tiny muted">Estado</span><span class="tiny"><span class="dot"></span> Operativo</span></div>
-      <div class="tiny muted" style="margin-top:8px">Panel de administración RootPath</div>
-    </div>
   </div>
 </aside>
 
 <main class="main">
   <header class="topbar">
-    <div class="top-title"><h1 id="topTitle">Estadísticas</h1><p id="topSub">Visión general del estado y actividad de la plataforma.</p></div>
+    <div class="top-title"><h1 id="topTitle">Estadísticas</h1><p id="topSub">Visión general del estado y la actividad.</p></div>
     <div class="top-actions">
       <button class="icon-btn" title="Dashboard" onclick="window.location='/plugins/rootpath/dashboard'">⌂</button>
       <button class="icon-btn" title="Recargar" onclick="load()">↻</button>
@@ -156,7 +147,6 @@ tr:last-child td{border-bottom:0}
   </header>
 
   <div class="content" id="content">
-    <!-- STATISTICS -->
     <section id="statistics" class="page active">
       <div class="page-head">
         <div><div class="kicker">Visión general</div><h2>Estadísticas</h2><p>Actividad, progreso, distribución y rendimiento general del entorno.</p></div>
@@ -201,7 +191,6 @@ tr:last-child td{border-bottom:0}
       </div>
     </section>
 
-    <!-- USERS -->
     <section id="users" class="page">
       <div class="page-head">
         <div><div class="kicker">Comunidad</div><h2>Usuarios</h2><p>Administra cuentas, roles, actividad y estado de acceso.</p></div>
@@ -216,7 +205,6 @@ tr:last-child td{border-bottom:0}
       </div>
     </section>
 
-    <!-- SCOREBOARD -->
     <section id="scoreboard" class="page">
       <div class="page-head">
         <div><div class="kicker">Competencia</div><h2>Scoreboard</h2><p>Clasificación, puntos y progreso de los participantes.</p></div>
@@ -230,7 +218,6 @@ tr:last-child td{border-bottom:0}
       </div>
     </section>
 
-    <!-- CHALLENGES -->
     <section id="challenges" class="page">
       <div class="page-head">
         <div><div class="kicker">Contenido técnico</div><h2>Retos</h2><p>Catálogo de retos con su estado, categoría, dificultad y puntuación.</p></div>
@@ -251,7 +238,6 @@ tr:last-child td{border-bottom:0}
       </div>
     </section>
 
-    <!-- SUBMISSIONS -->
     <section id="submissions" class="page">
       <div class="page-head"><div><div class="kicker">Actividad</div><h2 id="subs-title">Todas las submissions</h2><p>Historial de respuestas enviadas por los usuarios.</p></div></div>
       <div class="card card-pad">
@@ -268,7 +254,7 @@ tr:last-child td{border-bottom:0}
 
 <script>
 const META={
-  statistics:["Estadísticas","Visión general del estado y actividad de la plataforma."],
+  statistics:["Estadísticas","Visión general del estado y la actividad."],
   users:["Usuarios","Administra cuentas, roles y actividad."],
   scoreboard:["Scoreboard","Clasificación y puntuación de participantes."],
   challenges:["Retos","Administra el catálogo de desafíos."],

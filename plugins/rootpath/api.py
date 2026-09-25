@@ -61,7 +61,7 @@ def _readiness(solved, hints):
 
 @bp.route("/api/ping")
 def ping():
-    return jsonify({"ok": True, "plugin": "rootpath", "version": "0.2"})
+    return jsonify({"ok": True})
 
 
 @bp.route("/api/paths")
@@ -194,15 +194,10 @@ def _runtime(name, default=None):
 
 
 @bp.route("/api/status")
+@authed_only
 def agent_status():
-    import json as _json
     paused = _runtime("deploy_paused", "0") == "1"
-    ms = _runtime("monitor_status.json")
-    try:
-        monitor = _json.loads(ms) if ms else None
-    except Exception:
-        monitor = None
-    return jsonify({"success": True, "deploy_paused": paused, "monitor": monitor})
+    return jsonify({"success": True, "deploy_paused": paused})
 
 
 @bp.route("/api/agent/hint")
@@ -227,7 +222,7 @@ def _pause_guard():
     if request.method != "POST":
         return
     if request.path == "/plugins/rootpath/api/exam/start" and _runtime("deploy_paused", "0") == "1":
-        abort(503, description="Plataforma en pausa por carga alta (monitor).")
+        abort(503, description="Servicio temporalmente no disponible.")
 
 
 @bp.route("/api/agent/map", methods=["POST"])

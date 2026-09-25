@@ -71,7 +71,6 @@
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:1px solid #2a3a4a;background:#0d1925;color:#b8c9da;font-size:12px;font-weight:700}
   .chip.green{color:#73efad;border-color:rgba(54,226,138,.35)}.chip.blue{color:#7cbaff;border-color:rgba(77,163,255,.35)}.chip.purple{color:#c0aaff;border-color:rgba(157,124,255,.35)}
-  /* carpetas */
   .folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:22px}
   .folder{display:flex;align-items:center;gap:18px;padding:24px;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(180deg,rgba(15,27,39,.9),rgba(10,21,32,.9));cursor:pointer;transition:.18s ease}
   .folder:hover{transform:translateY(-2px);border-color:#34506a;box-shadow:var(--shadow)}
@@ -80,7 +79,6 @@
   .folder-title{font-size:19px;font-weight:750}
   .folder-sub{font-size:12.5px;color:var(--muted);margin-top:4px}
   .folder-arrow{font-size:26px;color:#5f7891}
-  /* filas de retos */
   .rows{display:grid;gap:12px}
   .row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 24px;border:1px solid var(--line);border-radius:16px;background:#0b1621;cursor:pointer;transition:.15s ease}
   .row:hover{border-color:#33506b;transform:translateX(2px)}
@@ -130,7 +128,7 @@
 <body>
 <div class="shell">
   <aside class="sidebar">
-    <div class="brand"><div class="brand-mark">&gt;_</div><span>RootPath<small>AI Cyber Range</small></span></div>
+    <div class="brand"><div class="brand-mark">&gt;_</div><span>RootPath<small>Cyber Range</small></span></div>
     <nav class="nav">
       <button class="nav-btn active" data-page="desafios"><span class="nav-icon">◆</span><span class="nav-label">Desafíos</span></button>
       <button class="nav-btn" data-page="rutas"><span class="nav-icon">◫</span><span class="nav-label">Rutas</span></button>
@@ -147,10 +145,6 @@
         <div class="tiny muted" style="margin-top:6px" id="sb-route">–</div>
         <div class="progress"><span id="sb-bar" style="width:0%"></span></div>
       </div>
-      <div class="mini-card">
-        <div class="mini-row"><span class="tiny muted">Plataforma</span><span class="tiny" id="sb-status">· cargando</span></div>
-        <div class="tiny muted" style="margin-top:8px" id="sb-node">Proxmox · agentmanaged</div>
-      </div>
     </div>
   </aside>
 
@@ -166,9 +160,7 @@
     </header>
 
     <div class="content">
-      <!-- DESAFIOS -->
       <section id="desafios" class="page active">
-        <!-- vista: CATEGORIAS -->
         <div id="scr-cats" class="screen active">
           <div class="page-head">
             <div><div class="kicker">Catálogo</div><h2>Desafíos por categoría</h2><p>Elige una carpeta para ver sus retos. Cada categoría agrupa retos del mismo tipo.</p></div>
@@ -177,7 +169,6 @@
           <div class="folders" id="folders"><div class="card card-pad tiny muted">Cargando…</div></div>
         </div>
 
-        <!-- vista: RETOS DE UNA CATEGORIA -->
         <div id="scr-cat" class="screen">
           <div class="crumbs"><a onclick="showCats()">Categorías</a><span>›</span><b id="crumb-cat">—</b></div>
           <div class="page-head">
@@ -187,7 +178,6 @@
           <div class="rows" id="cat-list"></div>
         </div>
 
-        <!-- vista: DETALLE DEL RETO -->
         <div id="scr-chal" class="screen">
           <div class="crumbs"><a onclick="showCats()">Categorías</a><span>›</span><a id="crumb-back-cat" onclick="backToCat()">—</a><span>›</span><b id="crumb-chal">—</b></div>
           <div class="page-head">
@@ -221,29 +211,22 @@
             <aside class="card card-pad lab-card">
               <div class="card-head"><div><div class="kicker">Entorno</div><h3>Estado del reto</h3></div><span class="chip" id="lab-mode">—</span></div>
               <div class="lab-status">
-                <div class="lab-row"><span>Plataforma</span><strong id="labState">· cargando</strong></div>
-                <div class="lab-row"><span>Endpoint</span><strong id="labEndpoint" style="text-align:right;max-width:60%;word-break:break-all">—</strong></div>
-                <div class="lab-row"><span>Servicio</span><strong id="labService">—</strong></div>
+                <div class="lab-row"><span>Estado</span><strong id="labState">· cargando</strong></div>
+                <div class="lab-row"><span>Acceso</span><strong id="labEndpoint" style="text-align:right;max-width:60%;word-break:break-all">—</strong></div>
                 <div class="lab-row"><span>Tiempo restante</span><strong id="labRemain">—</strong></div>
-                <div class="lab-row"><span>Nodo · CPU</span><strong id="nodeCpu">—</strong></div>
-                <div class="lab-row"><span>Nodo · RAM</span><strong id="nodeRam">—</strong></div>
               </div>
               <div class="lab-actions">
                 <button class="btn success" id="openBtn" onclick="labAction('start')">▶ Abrir</button>
                 <button class="btn danger" id="closeBtn" onclick="labAction('stop')">■ Parar</button>
                 <button class="btn purple" id="restartBtn" onclick="labAction('restart')">↻ Reiniciar</button>
               </div>
-              <div class="mini-card" style="margin-top:18px"><div class="tiny" style="line-height:1.6"><strong>Tu instancia:</strong> <b>Abrir</b> crea un contenedor <u>exclusivo para ti</u> en un puerto propio (TTL 60 min). Al acertar la flag se cierra al instante; o se apaga solo al terminar el cronómetro. <b>Parar</b> lo tumba antes.</div></div>
-              <div style="height:20px"></div>
-              <div class="card-head"><h3>Registro</h3><button class="btn ghost" onclick="clearLog()">Limpiar</button></div>
-              <div class="log" id="labLog"></div>
+              <div class="mini-card" style="margin-top:18px"><div class="tiny" style="line-height:1.6"><strong>Tu entorno:</strong> <b>Abrir</b> despliega un entorno <u>exclusivo para ti</u>. Al acertar la bandera se cierra; <b>Parar</b> lo detiene antes.</div></div>
             </aside>
           </div>
           <div style="margin-top:20px"><button class="btn" onclick="backToCat()">← Volver a la categoría</button></div>
         </div>
       </section>
 
-      <!-- RUTAS -->
       <section id="rutas" class="page">
         <div class="page-head">
           <div><div class="kicker">Aprendizaje dirigido</div><h2>Rutas</h2><p>Programas por certificación y dominio, con progreso y readiness calculados sobre tus resoluciones.</p></div>
@@ -252,7 +235,6 @@
         <div class="grid grid-3" id="routes-grid"><div class="card card-pad tiny muted">Cargando rutas…</div></div>
       </section>
 
-      <!-- EXAMEN -->
       <section id="examen" class="page">
         <div class="page-head">
           <div><div class="kicker">Simulación controlada</div><h2>Modo Examen</h2><p>Sesiones cronometradas, sin pistas y con informe obligatorio al finalizar.</p></div>
@@ -280,7 +262,6 @@
         </div>
       </section>
 
-      <!-- ANALITICAS -->
       <section id="analiticas" class="page">
         <div class="page-head">
           <div><div class="kicker">Visibilidad</div><h2>Analíticas</h2><p>Progreso, dificultad real de los retos y salud operativa del cyber range.</p></div>
@@ -297,16 +278,14 @@
         </div>
       </section>
 
-      <!-- WRITEUPS -->
       <section id="writeups" class="page">
         <div class="page-head">
           <div><div class="kicker">Base de conocimiento</div><h2>Writeups</h2><p>Documentación personal y revisable de cada reto resuelto.</p></div>
           <button class="btn primary" onclick="notify('La bitácora de writeups llega en una fase posterior')">Nuevo writeup</button>
         </div>
-        <div class="card card-pad"><p class="muted" style="line-height:1.75;margin:0">El registro estructurado de writeups y su generación automática por el agente redactor se implementan en una fase posterior del roadmap.</p></div>
+        <div class="card card-pad"><p class="muted" style="line-height:1.75;margin:0">El registro estructurado de writeups se implementará en una fase posterior.</p></div>
       </section>
 
-      <!-- USUARIOS -->
       <section id="usuarios" class="page">
         <div class="page-head">
           <div><div class="kicker">Administración</div><h2>Usuarios</h2><p>Estado de cuentas y actividad.</p></div>
@@ -319,10 +298,9 @@
         </div>
       </section>
 
-      <!-- AUDITORIA (solo administradores) -->
       <section id="auditoria" class="page">
         <div class="page-head">
-          <div><div class="kicker">Trazabilidad</div><h2>Auditoría de laboratorios</h2><p>Quién desplegó, tumbó o reinició cada contenedor, con su id de usuario único y su IP de origen.</p></div>
+          <div><div class="kicker">Trazabilidad</div><h2>Auditoría de laboratorios</h2><p>Cuándo se abrió, detuvo o reinició cada entorno y con qué identidad de usuario.</p></div>
           <div class="actions">
             <input class="input" id="audChallenge" placeholder="Reto…" style="width:170px" />
             <select class="input" id="audAction" style="width:150px"><option value="">Acción: todas</option><option value="start">Abrir</option><option value="stop">Parar</option><option value="restart">Reiniciar</option></select>
@@ -331,8 +309,8 @@
         </div>
         <div class="grid grid-4" id="aud-stats"></div>
         <div class="card card-pad" style="margin-top:24px">
-          <div class="card-head"><h3>Registro de acciones</h3><span class="chip" id="aud-count">—</span></div>
-          <div style="overflow:auto"><table><thead><tr><th>Fecha (UTC)</th><th>Usuario</th><th>ID</th><th>IP</th><th>Acción</th><th>Servicio</th><th>Resultado</th></tr></thead><tbody id="aud-body"><tr><td colspan="7" class="muted tiny">Cargando…</td></tr></tbody></table></div>
+          <div class="card-head"><h3>Historial de acciones</h3><span class="chip" id="aud-count">—</span></div>
+          <div style="overflow:auto"><table><thead><tr><th>Fecha (UTC)</th><th>Usuario</th><th>ID</th><th>IP</th><th>Acción</th><th>Entorno</th><th>Resultado</th></tr></thead><tbody id="aud-body"><tr><td colspan="7" class="muted tiny">Cargando…</td></tr></tbody></table></div>
         </div>
       </section>
     </div>
@@ -348,7 +326,7 @@ const CAT_ICON={Web:"◧",Linux:"⌘",AD:"⬡",Blue:"▦",Crypto:"◇",Forensics
 function notify(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(window.__tt);window.__tt=setTimeout(()=>t.classList.remove('show'),2400);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function log(k,t){const el=document.getElementById('labLog');if(!el)return;const d=document.createElement('div');d.className=k;d.textContent='['+new Date().toLocaleTimeString('es-DO',{hour12:false})+'] '+t;el.appendChild(d);el.scrollTop=el.scrollHeight;}
-function clearLog(){document.getElementById('labLog').innerHTML='';}
+function clearLog(){const el=document.getElementById('labLog');if(el)el.innerHTML='';}
 async function api(path,opts){opts=opts||{};opts.credentials='same-origin';opts.headers=Object.assign({'Content-Type':'application/json','CSRF-Token':CSRF},opts.headers||{});const r=await fetch(path,opts);let j=null;try{j=await r.json();}catch(e){}return {status:r.status,json:j};}
 function screen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo({top:0,behavior:'smooth'});}
 function go(id){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.page===id));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.getElementById('topTitle').textContent=meta[id][0];document.getElementById('topSub').textContent=meta[id][1];window.scrollTo({top:0,behavior:'smooth'});}
@@ -411,8 +389,8 @@ function renderChallenge(){
   document.getElementById('ch-chips').innerHTML='<span class="chip '+(c.solved?'green':'blue')+'">'+(c.solved?'● Resuelto':'● Pendiente')+'</span><span class="chip blue">'+esc(c.category)+'</span><span class="chip">'+c.value+' puntos</span>';
   document.getElementById('ch-tags').innerHTML='<span class="chip">'+esc(c.category)+'</span>';
   const m=(c.description||'').match(/(https?:\/\/[^\s]+|ssh [^\n]+)/i);
-  document.getElementById('labEndpoint').textContent=m?m[1]:'adjunto / ver reto';
-  document.getElementById('lab-mode').textContent=m?'servicio':'estático';
+  document.getElementById('labEndpoint').textContent=m?m[1]:'archivo adjunto';
+  document.getElementById('lab-mode').textContent=m?'interactivo':'archivo';
   const h=document.getElementById('ch-hints');
   if(!c.hints||!c.hints.length){h.innerHTML='<div class="tiny muted">Sin pistas.</div>';}
   else h.innerHTML=c.hints.map((x,i)=>{const u=x.content!=null;return '<div class="hint" id="hint-'+x.id+'"><button onclick="toggleHint('+x.id+')"><span><strong>Pista '+(i+1)+'</strong> <span class="muted">· '+x.cost+' pts</span></span><span>'+(u?'▾':'🔒')+'</span></button><div class="hint-body">'+(u?esc(x.content):'<button class="btn" onclick="unlockHint('+x.id+')">Desbloquear ('+x.cost+' pts)</button>')+'</div></div>';}).join('');
@@ -431,7 +409,6 @@ async function submitFlag(){
   else if(st==='incorrect'){notify('Incorrecto');log('bad','Flag incorrecta');}
   else notify('Respuesta: '+(r.json&&r.json.data&&r.json.data.message?r.json.data.message:r.status));
 }
-// laboratorio
 let LAB=null,LABTIMER=null;
 function setLabButtons(on){['openBtn','closeBtn','restartBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=!on;});}
 function setLabCountdown(secs){
@@ -451,20 +428,18 @@ async function loadLab(name){LAB=null;setLabButtons(false);setLabCountdown(0);co
     if(ep)ep.textContent=j.connection?j.connection:'(pulsa Abrir para obtener tu instancia)';
     setLabCountdown(j.running?(j.remaining||0):0);
   }else{
-    if(svc)svc.textContent='sin servicio (reto estático)';
+    if(svc)svc.textContent='sin entorno';
     if(ep)ep.textContent='adjunto / ver reto';
   }}
-async function labAction(a){if(!LAB){notify('Este reto no tiene servicio controlable');return;}notify('Acción: '+a+'…');log('info','Laboratorio '+a+' · '+LAB.service);
+async function labAction(a){if(!LAB){notify('Este reto no tiene entorno');return;}notify('Acción: '+a+'…');log('info','Laboratorio '+a+' · '+LAB.service);
   const r=await api('/plugins/rootpath/api/lab/control',{method:'POST',body:JSON.stringify({name:LAB.name,action:a})});
   if(r.status===200&&r.json&&r.json.ok){notify('OK · '+a);log('ok','Laboratorio '+a+' correcto');}else{notify('Fallo al '+a);log('bad','Fallo '+a);}
   await loadLab(LAB.name);}
-// rutas
 async function loadPaths(){const r=await api('/plugins/rootpath/api/paths');if(r.status!==200||!r.json.data)return;PATHS=r.json.data;
   const icons=['◇','⌘','▦','⌁','◈','◐','▷','✦'];
   document.getElementById('routes-grid').innerHTML=PATHS.map((c,i)=>{const tot=c.domain_detail.reduce((a,d)=>a+d.challenges.length,0);const done=c.domain_detail.reduce((a,d)=>a+d.challenges.filter(x=>x.solved).length,0);const pct=tot?Math.round(100*done/tot):0;
     return '<div class="card route-card"><div class="route-icon">'+icons[i%icons.length]+'</div><h3>'+esc(c.name)+'</h3><p>'+esc(c.description||'')+'</p><div class="progress"><span style="width:'+pct+'%"></span></div><div class="route-meta"><span>'+done+' / '+tot+' retos</span><span>readiness '+c.score+'%</span></div></div>';}).join('');
   if(PATHS.length)document.getElementById('sb-route').textContent=PATHS.length+' rutas activas';}
-// analiticas
 async function loadAnalytics(){const r=await api('/plugins/rootpath/api/analytics');if(r.status!==200||!r.json.data)return;ANALYTICS=r.json.data;const d=ANALYTICS;
   document.getElementById('an-stats').innerHTML='<div class="card stat"><div class="label">Retos publicados</div><div class="value">'+d.challenges+'</div></div><div class="card stat"><div class="label">Usuarios</div><div class="value">'+d.users+'</div></div><div class="card stat"><div class="label">Resoluciones</div><div class="value">'+d.solves+'</div></div><div class="card stat"><div class="label">Pistas usadas</div><div class="value">'+d.hint_unlocks+'</div></div>';
   const max=Math.max(1,...d.by_category.map(c=>c.solves));
@@ -474,7 +449,6 @@ async function loadAnalytics(){const r=await api('/plugins/rootpath/api/analytic
   const au=document.getElementById('an-users');if(au)au.innerHTML=top;
   const auc=document.getElementById('an-users-count');if(auc)auc.textContent=d.users+' cuentas';
   const uc=document.getElementById('usr-count');if(uc)uc.textContent=d.users+' cuentas';}
-// auditoria de laboratorios (solo admin)
 function audBadge(x){if(!x)return '';if(x.indexOf('ok')===0)return '<span class="chip green">'+esc(x)+'</span>';if(x.indexOf('denied')===0)return '<span class="chip" style="color:#f5c96a;border-color:rgba(245,201,106,.4)">'+esc(x)+'</span>';return '<span class="chip" style="color:#ff8896;border-color:rgba(255,102,119,.4)">'+esc(x)+'</span>';}
 async function loadAudit(){
   if(!IS_ADMIN)return;
@@ -497,12 +471,8 @@ async function loadAudit(){
   document.getElementById('aud-count').textContent=d.length+' de '+r.json.total;
   body.innerHTML=d.map(x=>'<tr><td class="tiny">'+esc((x.created_at||'').replace('T',' ').replace('Z',''))+'</td><td><strong>'+esc(x.user_name||'—')+'</strong></td><td>'+x.user_id+'</td><td><code style="color:#8fd0ff">'+esc(x.ip||'—')+'</code></td><td>'+esc(x.action||'—')+'</td><td>'+esc(x.service||'—')+'</td><td>'+audBadge(x.result)+'</td></tr>').join('')||'<tr><td colspan="7" class="muted tiny">Sin registros.</td></tr>';
 }
-// estado plataforma
 async function loadStatus(){const r=await api('/plugins/rootpath/api/status');if(r.status!==200||!r.json)return;STATUS=r.json;const paused=r.json.deploy_paused;
-  document.getElementById('labState').innerHTML=paused?'<span style="color:var(--amber)">En pausa por carga</span>':'<span class="status-dot"></span> Activa';
-  document.getElementById('sb-status').innerHTML=paused?'<span style="color:var(--amber)">· en pausa</span>':'<span class="status-dot"></span> Online';
-  const m=r.json.monitor&&r.json.monitor.metrics;if(m){document.getElementById('nodeCpu').textContent=m.cpu_pct+'%';document.getElementById('nodeRam').textContent=m.mem_pct+'%';}}
-// examen
+  const ls=document.getElementById('labState');if(ls)ls.innerHTML=paused?'<span style="color:var(--amber)">En pausa</span>':'<span class="status-dot"></span> Activa';}
 async function loadExam(){const r=await api('/plugins/rootpath/api/exam/status');if(r.status!==200||!r.json)return;const j=r.json;
   if(!j.active){document.getElementById('ex-title').textContent='Sin examen activo';document.getElementById('examTimer').textContent='--:--:--';document.getElementById('ex-count').textContent='—';document.getElementById('ex-progress').textContent='—';document.getElementById('ex-list').innerHTML='<div class="tiny muted">Inicia un simulacro para ver los objetivos.</div>';document.getElementById('ex-chip').textContent='inactivo';fillExamCerts();if(j.expired)notify('Tu examen anterior expiró');return;}
   document.getElementById('ex-title').textContent='Simulacro en curso';document.getElementById('ex-chip').textContent='pistas bloqueadas';document.getElementById('ex-count').textContent=j.challenges.length+' retos';
