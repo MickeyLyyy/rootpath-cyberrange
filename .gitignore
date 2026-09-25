@@ -28,3 +28,4 @@ pipeline/published_services.json
 # Artefactos generados de retos
 forensic-build/
 challenges-v2/forensics/*.img
+monitoring/.env

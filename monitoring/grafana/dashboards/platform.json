@@ -1,0 +1,47 @@
+{
+  "uid": "rp-platform",
+  "title": "RootPath · Plataforma",
+  "tags": ["rootpath", "platform"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Usuarios",
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "targets": [{ "refId": "A", "expr": "rootpath_users_total" }]
+    },
+    {
+      "id": 2, "type": "stat", "title": "Resoluciones",
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "targets": [{ "refId": "A", "expr": "rootpath_solves_total" }]
+    },
+    {
+      "id": 3, "type": "stat", "title": "Pistas usadas",
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "targets": [{ "refId": "A", "expr": "rootpath_hint_unlocks_total" }]
+    },
+    {
+      "id": 4, "type": "stat", "title": "Retos",
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "targets": [{ "refId": "A", "expr": "sum(rootpath_challenges_total)" }]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Submissions por resultado",
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 6 },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "targets": [{ "refId": "A", "expr": "rootpath_submissions_total" }]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "uid": "rp-labs",
+  "title": "RootPath · Laboratorios",
+  "tags": ["rootpath", "labs"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "time": { "from": "now-3h", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Instancias activas",
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "targets": [{ "refId": "A", "expr": "rootpath_instances_active" }]
+    },
+    {
+      "id": 2, "type": "stat", "title": "Puertos usados",
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "targets": [{ "refId": "A", "expr": "rootpath_ports_used" }]
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "Instancias por tipo",
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "targets": [{ "refId": "A", "expr": "rootpath_instances_by_kind" }]
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "Acciones de laboratorio (acumulado)",
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "targets": [{ "refId": "A", "expr": "rootpath_deploys_total" }]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Memoria por contenedor (rp-*)",
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "targets": [{ "refId": "A", "expr": "container_memory_usage_bytes{name=~\"rp-.*\"}" }]
+    }
+  ]
+}
